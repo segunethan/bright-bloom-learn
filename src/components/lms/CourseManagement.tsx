@@ -26,19 +26,30 @@ const CourseManagement = () => {
           {
             id: 's1',
             title: 'Introduction',
+            order: 1,
             chapters: [
               {
                 id: 'c1',
                 title: 'Getting Started',
+                order: 1,
                 modules: [
                   {
                     id: 'm1',
                     title: 'Course Overview',
-                    type: 'video+text' as const,
-                    content: 'Welcome to this comprehensive course. This module will introduce you to the key concepts and learning objectives.',
-                    videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-                    isCompleted: false,
-                    duration: 10
+                    order: 1,
+                    submodules: [
+                      {
+                        id: 'sm1',
+                        title: 'Course Overview',
+                        type: 'video+text' as const,
+                        textContent: 'Welcome to this comprehensive course. This module will introduce you to the key concepts and learning objectives.',
+                        videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+                        isCompleted: false,
+                        duration: 10,
+                        status: 'published' as const,
+                        order: 1
+                      }
+                    ]
                   }
                 ]
               }
@@ -57,7 +68,7 @@ const CourseManagement = () => {
   };
 
   const handleEditContent = (courseId: string) => {
-    navigate(`/lms/course/${courseId}`);
+    navigate(`/lms/admin/courses/${courseId}`);
   };
 
   const handleCourseSettings = (courseId: string) => {
