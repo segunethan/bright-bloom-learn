@@ -5,12 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useLMS } from '../../contexts/LMSContext';
-import { ArrowLeft, Book, CheckCircle, Clock, User } from 'lucide-react';
+import { ArrowLeft, Book, CheckCircle, Clock, Play } from 'lucide-react';
 
 const CourseViewer = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const { courses, getCourseProgress, updateProgress } = useLMS();
+  const { courses, currentUser, getCourseProgress, updateProgress } = useLMS();
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
 
   const course = courses.find(c => c.id === courseId);
@@ -39,7 +39,6 @@ const CourseViewer = () => {
 
   const handleModuleComplete = (moduleId: string) => {
     updateProgress(course.id, moduleId);
-    // In real app, this would mark module as completed
     console.log(`Module ${moduleId} completed`);
   };
 
@@ -52,7 +51,7 @@ const CourseViewer = () => {
             <div className="flex items-center space-x-4">
               <Button
                 variant="ghost"
-                onClick={() => navigate('/lms/student')}
+                onClick={() => navigate(currentUser?.role === 'admin' ? '/lms/admin' : '/lms/student')}
                 className="text-gray-600 hover:text-green-600"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -155,14 +154,23 @@ const CourseViewer = () => {
                 </CardHeader>
                 
                 <CardContent className="space-y-6">
-                  {/* Video Player (if module has video) */}
+                  {/* Video Player */}
                   {currentModule.videoUrl && (
-                    <div className="aspect-video bg-gray-900 rounded-lg flex items-center justify-center">
-                      <div className="text-center text-white">
-                        <User className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                        <p className="text-lg">Video Player</p>
-                        <p className="text-sm opacity-75">Video would load here in production</p>
-                      </div>
+                    <div className="aspect-video bg-gray-900 rounded-lg overflow-hidden">
+                      <video 
+                        controls 
+                        className="w-full h-full"
+                        poster="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMxMTEiLz4KPHN2ZyB4PSIzNSIgeT0iMzUiIHdpZHRoPSIzMCIgaGVpZ2h0PSIzMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiPgo8cG9seWdvbiBwb2ludHM9IjUsMyw2LjA5LDEyLjEyLDE5LDEyLDE4LDMiPjwvcG9seWdvbj4KPC9zdmc+Cjwvc3ZnPg=="
+                      >
+                        <source src={currentModule.videoUrl} type="video/mp4" />
+                        <div className="flex items-center justify-center h-full text-white">
+                          <div className="text-center">
+                            <Play className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                            <p className="text-lg">Video Player</p>
+                            <p className="text-sm opacity-75">Your browser doesn't support video playback</p>
+                          </div>
+                        </div>
+                      </video>
                     </div>
                   )}
 
@@ -170,7 +178,7 @@ const CourseViewer = () => {
                   {currentModule.content && (
                     <div className="prose max-w-none">
                       <div className="bg-gray-50 p-6 rounded-lg">
-                        <p className="text-gray-700 leading-relaxed">
+                        <p className="text-gray-700 leading-relaxed mb-4">
                           {currentModule.content}
                         </p>
                         <div className="mt-4 p-4 bg-blue-50 border-l-4 border-blue-400 rounded">

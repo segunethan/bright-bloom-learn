@@ -41,6 +41,14 @@ interface Module {
   duration?: number;
 }
 
+interface CourseInput {
+  title: string;
+  description: string;
+  sections: Section[];
+  totalModules: number;
+  completionRate: number;
+}
+
 interface LMSContextType {
   currentUser: User | null;
   courses: Course[];
@@ -49,6 +57,7 @@ interface LMSContextType {
   logout: () => void;
   updateProgress: (courseId: string, moduleId: string) => void;
   getCourseProgress: (courseId: string) => number;
+  addCourse: (course: CourseInput) => void;
 }
 
 const LMSContext = createContext<LMSContextType | undefined>(undefined);
@@ -65,8 +74,8 @@ export const LMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Mock data - in real app, this would come from backend
-  const [courses] = useState<Course[]>([
+  // Mock data with sample videos
+  const [courses, setCourses] = useState<Course[]>([
     {
       id: '1',
       title: 'Product Design Fundamentals',
@@ -84,8 +93,8 @@ export const LMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                   id: 'm1',
                   title: 'What is Product Design?',
                   type: 'video+text',
-                  content: 'Product design is the process of creating solutions...',
-                  videoUrl: 'https://example.com/video1',
+                  content: 'Product design is the process of creating solutions that address user needs and business goals. It combines creativity, research, and technical skills to develop products that are both functional and desirable.',
+                  videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
                   isCompleted: false,
                   duration: 15
                 },
@@ -93,17 +102,26 @@ export const LMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                   id: 'm2',
                   title: 'User Research Methods',
                   type: 'video',
-                  content: '',
-                  videoUrl: 'https://example.com/video2',
+                  content: 'This module covers various user research methods including interviews, surveys, and usability testing.',
+                  videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4',
                   isCompleted: false,
                   duration: 20
+                },
+                {
+                  id: 'm3',
+                  title: 'Design Process Overview',
+                  type: 'video+text',
+                  content: 'Understanding the end-to-end design process from research to implementation.',
+                  videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4',
+                  isCompleted: false,
+                  duration: 25
                 }
               ]
             }
           ]
         }
       ],
-      totalModules: 2,
+      totalModules: 3,
       completionRate: 0
     },
     {
@@ -120,19 +138,29 @@ export const LMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               title: 'Market Research',
               modules: [
                 {
-                  id: 'm3',
+                  id: 'm4',
                   title: 'Understanding Your Market',
-                  type: 'text',
-                  content: 'Market research is crucial for product success...',
+                  type: 'video+text',
+                  content: 'Market research is crucial for product success. Learn how to identify market opportunities and validate your product ideas.',
+                  videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
                   isCompleted: false,
-                  duration: 10
+                  duration: 18
+                },
+                {
+                  id: 'm5',
+                  title: 'Competitive Analysis',
+                  type: 'video',
+                  content: 'How to analyze competitors and position your product effectively.',
+                  videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4',
+                  isCompleted: false,
+                  duration: 22
                 }
               ]
             }
           ]
         }
       ],
-      totalModules: 1,
+      totalModules: 2,
       completionRate: 0
     }
   ]);
@@ -159,8 +187,32 @@ export const LMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setIsAuthenticated(false);
   };
 
+  const addCourse = (courseInput: CourseInput) => {
+    const newCourse: Course = {
+      ...courseInput,
+      id: Date.now().toString(), // Generate unique ID
+    };
+    setCourses(prevCourses => [...prevCourses, newCourse]);
+  };
+
   const updateProgress = (courseId: string, moduleId: string) => {
-    // Update module completion - in real app, this would sync with backend
+    setCourses(prevCourses => 
+      prevCourses.map(course => {
+        if (course.id === courseId) {
+          const updatedSections = course.sections.map(section => ({
+            ...section,
+            chapters: section.chapters.map(chapter => ({
+              ...chapter,
+              modules: chapter.modules.map(module => 
+                module.id === moduleId ? { ...module, isCompleted: true } : module
+              )
+            }))
+          }));
+          return { ...course, sections: updatedSections };
+        }
+        return course;
+      })
+    );
     console.log(`Progress updated for course ${courseId}, module ${moduleId}`);
   };
 
@@ -191,7 +243,8 @@ export const LMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       login,
       logout,
       updateProgress,
-      getCourseProgress
+      getCourseProgress,
+      addCourse
     }}>
       {children}
     </LMSContext.Provider>

@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +9,8 @@ import { useLMS } from '../../contexts/LMSContext';
 import { Book, Plus, Edit, Settings } from 'lucide-react';
 
 const CourseManagement = () => {
-  const { courses } = useLMS();
+  const { courses, addCourse } = useLMS();
+  const navigate = useNavigate();
   const [isCreating, setIsCreating] = useState(false);
   const [newCourse, setNewCourse] = useState({
     title: '',
@@ -16,10 +18,51 @@ const CourseManagement = () => {
   });
 
   const handleCreateCourse = () => {
-    // In real app, this would create a new course via API
-    console.log('Creating course:', newCourse);
-    setIsCreating(false);
-    setNewCourse({ title: '', description: '' });
+    if (newCourse.title && newCourse.description) {
+      const courseData = {
+        title: newCourse.title,
+        description: newCourse.description,
+        sections: [
+          {
+            id: 's1',
+            title: 'Introduction',
+            chapters: [
+              {
+                id: 'c1',
+                title: 'Getting Started',
+                modules: [
+                  {
+                    id: 'm1',
+                    title: 'Course Overview',
+                    type: 'video+text' as const,
+                    content: 'Welcome to this comprehensive course. This module will introduce you to the key concepts and learning objectives.',
+                    videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+                    isCompleted: false,
+                    duration: 10
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        totalModules: 1,
+        completionRate: 0
+      };
+      
+      addCourse(courseData);
+      console.log('Creating course:', courseData);
+      setIsCreating(false);
+      setNewCourse({ title: '', description: '' });
+    }
+  };
+
+  const handleEditContent = (courseId: string) => {
+    navigate(`/lms/course/${courseId}`);
+  };
+
+  const handleCourseSettings = (courseId: string) => {
+    console.log('Opening settings for course:', courseId);
+    // This would open a settings modal in a real app
   };
 
   return (
@@ -69,6 +112,7 @@ const CourseManagement = () => {
               <Button 
                 onClick={handleCreateCourse}
                 className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+                disabled={!newCourse.title || !newCourse.description}
               >
                 Create Course
               </Button>
@@ -120,11 +164,19 @@ const CourseManagement = () => {
               </div>
 
               <div className="flex space-x-2">
-                <Button variant="outline" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => handleEditContent(course.id)}
+                >
                   <Edit className="w-4 h-4 mr-2" />
                   Edit Content
                 </Button>
-                <Button variant="outline" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => handleCourseSettings(course.id)}
+                >
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
                 </Button>
