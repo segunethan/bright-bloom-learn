@@ -2,10 +2,12 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Book, User, Settings, GraduationCap } from 'lucide-react';
+import { Book, User, Settings, GraduationCap, Clock, Users } from 'lucide-react';
+import { useLMS } from '../contexts/LMSContext';
 
 const Index = () => {
   const navigate = useNavigate();
+  const { courses } = useLMS();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50">
@@ -44,6 +46,52 @@ const Index = () => {
             Develop your product career with our comprehensive Learning Management System. 
             Access courses, track progress, and master the skills you need to succeed.
           </p>
+        </div>
+
+        {/* Course Catalog */}
+        <div className="mb-12">
+          <h3 className="text-2xl font-bold text-gray-800 mb-8 text-center">Course Catalog</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {courses.map((course) => (
+              <div key={course.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <Book className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                
+                <h4 className="text-lg font-semibold text-gray-800 mb-2">{course.title}</h4>
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2">{course.description}</p>
+                
+                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 mr-1" />
+                    <span>{course.totalModules} lessons</span>
+                  </div>
+                  <div className="flex items-center">
+                    <Users className="w-4 h-4 mr-1" />
+                    <span>24 students</span>
+                  </div>
+                </div>
+                
+                <Button 
+                  onClick={() => navigate('/lms')}
+                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+                >
+                  Start Course
+                </Button>
+              </div>
+            ))}
+          </div>
+          
+          {courses.length === 0 && (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Book className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-gray-600">No courses available at the moment.</p>
+            </div>
+          )}
         </div>
 
         {/* Feature Cards */}

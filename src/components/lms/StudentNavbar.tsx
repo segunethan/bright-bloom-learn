@@ -31,9 +31,9 @@ const StudentNavbar = () => {
             
             <div className="hidden md:flex space-x-1">
               <Button
-                variant={isActive('/student') && !isActive('/progress') ? "default" : "ghost"}
+                variant={isActive('/student') && !isActive('/progress') && !isActive('/settings') ? "default" : "ghost"}
                 onClick={() => navigate('/lms/student')}
-                className={isActive('/student') && !isActive('/progress') ? 
+                className={isActive('/student') && !isActive('/progress') && !isActive('/settings') ? 
                   "bg-gradient-to-r from-green-500 to-emerald-600 text-white" : 
                   "text-gray-600 hover:text-green-600"
                 }
@@ -49,6 +49,17 @@ const StudentNavbar = () => {
                 }
               >
                 Progress
+              </Button>
+              <Button
+                variant={isActive('/settings') ? "default" : "ghost"}
+                onClick={() => navigate('/lms/student/settings')}
+                className={isActive('/settings') ? 
+                  "bg-gradient-to-r from-green-500 to-emerald-600 text-white" : 
+                  "text-gray-600 hover:text-green-600"
+                }
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
               </Button>
             </div>
           </div>

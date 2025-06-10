@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 interface User {
@@ -7,6 +8,16 @@ interface User {
   role: 'student' | 'admin';
   isActive: boolean;
   enrolledCourses: string[];
+}
+
+interface Student {
+  id: string;
+  name: string;
+  email: string;
+  isActive: boolean;
+  enrolledCourses: string[];
+  progress: number;
+  lastLogin: string;
 }
 
 interface Submodule {
@@ -65,6 +76,7 @@ interface CourseInput {
 interface LMSContextType {
   currentUser: User | null;
   courses: Course[];
+  students: Student[];
   isAuthenticated: boolean;
   login: (email: string, password: string, role: 'student' | 'admin') => Promise<boolean>;
   logout: () => void;
@@ -78,6 +90,11 @@ interface LMSContextType {
   addSubmodule: (courseId: string, sectionId: string, chapterId: string, moduleId: string, submodule: Omit<Submodule, 'id'>) => void;
   updateSubmodule: (courseId: string, sectionId: string, chapterId: string, moduleId: string, submoduleId: string, updates: Partial<Submodule>) => void;
   reorderItems: (courseId: string, type: 'section' | 'chapter' | 'module' | 'submodule', parentId: string, newOrder: string[]) => void;
+  inviteStudent: (email: string, name: string, assignedCourses: string[]) => void;
+  updateStudent: (studentId: string, updates: Partial<Student>) => void;
+  resetStudentPassword: (studentId: string) => string;
+  assignCourseToStudent: (studentId: string, courseId: string) => void;
+  unassignCourseFromStudent: (studentId: string, courseId: string) => void;
 }
 
 const LMSContext = createContext<LMSContextType | undefined>(undefined);
@@ -93,6 +110,37 @@ export const useLMS = () => {
 export const LMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Mock student data
+  const [students, setStudents] = useState<Student[]>([
+    {
+      id: '1',
+      name: 'Alice Johnson',
+      email: 'alice@example.com',
+      isActive: true,
+      enrolledCourses: ['1'],
+      progress: 78,
+      lastLogin: '2 hours ago'
+    },
+    {
+      id: '2',
+      name: 'Bob Smith',
+      email: 'bob@example.com',
+      isActive: true,
+      enrolledCourses: ['1'],
+      progress: 45,
+      lastLogin: '1 day ago'
+    },
+    {
+      id: '3',
+      name: 'Carol Brown',
+      email: 'carol@example.com',
+      isActive: false,
+      enrolledCourses: ['1'],
+      progress: 100,
+      lastLogin: '1 week ago'
+    }
+  ]);
 
   // Mock data with new hierarchy
   const [courses, setCourses] = useState<Course[]>([
@@ -396,10 +444,68 @@ export const LMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // Implementation for drag & drop reordering
   };
 
+  const inviteStudent = (email: string, name: string, assignedCourses: string[] = []) => {
+    const newStudent: Student = {
+      id: Date.now().toString(),
+      name,
+      email,
+      isActive: true,
+      enrolledCourses: assignedCourses,
+      progress: 0,
+      lastLogin: 'Never'
+    };
+    
+    setStudents(prev => [...prev, newStudent]);
+    console.log('Student invited:', newStudent);
+    // In a real app, this would send an email with login credentials
+  };
+
+  const updateStudent = (studentId: string, updates: Partial<Student>) => {
+    setStudents(prev =>
+      prev.map(student =>
+        student.id === studentId ? { ...student, ...updates } : student
+      )
+    );
+  };
+
+  const resetStudentPassword = (studentId: string): string => {
+    const newPassword = Math.random().toString(36).slice(-8);
+    console.log(`Password reset for student ${studentId}: ${newPassword}`);
+    // In a real app, this would send an email with the new password
+    return newPassword;
+  };
+
+  const assignCourseToStudent = (studentId: string, courseId: string) => {
+    setStudents(prev =>
+      prev.map(student =>
+        student.id === studentId
+          ? {
+              ...student,
+              enrolledCourses: [...student.enrolledCourses, courseId]
+            }
+          : student
+      )
+    );
+  };
+
+  const unassignCourseFromStudent = (studentId: string, courseId: string) => {
+    setStudents(prev =>
+      prev.map(student =>
+        student.id === studentId
+          ? {
+              ...student,
+              enrolledCourses: student.enrolledCourses.filter(id => id !== courseId)
+            }
+          : student
+      )
+    );
+  };
+
   return (
     <LMSContext.Provider value={{
       currentUser,
       courses,
+      students,
       isAuthenticated,
       login,
       logout,
@@ -412,7 +518,12 @@ export const LMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       addModule,
       addSubmodule,
       updateSubmodule,
-      reorderItems
+      reorderItems,
+      inviteStudent,
+      updateStudent,
+      resetStudentPassword,
+      assignCourseToStudent,
+      unassignCourseFromStudent
     }}>
       {children}
     </LMSContext.Provider>

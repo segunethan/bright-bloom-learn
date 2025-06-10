@@ -4,6 +4,7 @@ import { Routes, Route } from 'react-router-dom';
 import StudentNavbar from './StudentNavbar';
 import StudentCourses from './StudentCourses';
 import StudentProgress from './StudentProgress';
+import StudentSettings from './StudentSettings';
 
 const StudentDashboard = () => {
   return (
@@ -13,6 +14,7 @@ const StudentDashboard = () => {
         <Routes>
           <Route path="/" element={<StudentCourses />} />
           <Route path="/progress" element={<StudentProgress />} />
+          <Route path="/settings" element={<StudentSettings />} />
         </Routes>
       </main>
     </div>
