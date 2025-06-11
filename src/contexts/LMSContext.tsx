@@ -1,13 +1,15 @@
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@supabase/supabase-js';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-
-interface User {
+interface Profile {
   id: string;
   email: string;
   name: string;
   role: 'student' | 'admin';
   isActive: boolean;
-  enrolledCourses: string[];
+  phone_number?: string;
+  profile_picture_url?: string;
 }
 
 interface Student {
@@ -74,12 +76,15 @@ interface CourseInput {
 }
 
 interface LMSContextType {
-  currentUser: User | null;
+  currentUser: Profile | null;
+  session: Session | null;
   courses: Course[];
   students: Student[];
   isAuthenticated: boolean;
-  login: (email: string, password: string, role: 'student' | 'admin') => Promise<boolean>;
-  logout: () => void;
+  isLoading: boolean;
+  signUp: (email: string, password: string, name: string, role?: 'student' | 'admin') => Promise<{ error?: string }>;
+  signIn: (email: string, password: string) => Promise<{ error?: string }>;
+  signOut: () => Promise<void>;
   updateProgress: (courseId: string, submoduleId: string) => void;
   getCourseProgress: (courseId: string) => number;
   addCourse: (course: CourseInput) => void;
@@ -108,10 +113,12 @@ export const useLMS = () => {
 };
 
 export const LMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<Profile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Mock student data
+  // Mock student data (will be replaced with Supabase data later)
   const [students, setStudents] = useState<Student[]>([
     {
       id: '1',
@@ -142,7 +149,7 @@ export const LMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   ]);
 
-  // Mock data with new hierarchy
+  // Mock courses data (will be replaced with Supabase data later)
   const [courses, setCourses] = useState<Course[]>([
     {
       id: '1',
@@ -198,25 +205,138 @@ export const LMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   ]);
 
-  const login = async (email: string, password: string, role: 'student' | 'admin'): Promise<boolean> => {
-    if (email && password) {
-      setCurrentUser({
-        id: '1',
-        email,
-        name: email.split('@')[0],
-        role,
-        isActive: true,
-        enrolledCourses: ['1', '2']
-      });
-      setIsAuthenticated(true);
-      return true;
+  // Initialize authentication state
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session);
+        setSession(session);
+        setIsAuthenticated(!!session);
+        
+        if (session?.user) {
+          // Fetch user profile
+          setTimeout(async () => {
+            await fetchUserProfile(session.user.id);
+          }, 0);
+        } else {
+          setCurrentUser(null);
+        }
+        
+        setIsLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setIsAuthenticated(!!session);
+      
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      }
+      
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+
+      if (profile) {
+        setCurrentUser({
+          id: profile.id,
+          email: profile.email || '',
+          name: profile.name || '',
+          role: profile.role || 'student',
+          isActive: profile.is_active || true,
+          phone_number: profile.phone_number,
+          profile_picture_url: profile.profile_picture_url
+        });
+      }
+    } catch (error) {
+      console.error('Error in fetchUserProfile:', error);
     }
-    return false;
+  };
+
+  const signUp = async (email: string, password: string, name: string, role: 'student' | 'admin' = 'student') => {
+    try {
+      const redirectUrl = `${window.location.origin}/lms`;
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            name,
+            role
+          }
+        }
+      });
+
+      if (error) {
+        console.error('Sign up error:', error);
+        return { error: error.message };
+      }
+
+      return {};
+    } catch (error: any) {
+      console.error('Sign up error:', error);
+      return { error: error.message || 'An error occurred during sign up' };
+    }
+  };
+
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        console.error('Sign in error:', error);
+        return { error: error.message };
+      }
+
+      return {};
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      return { error: error.message || 'An error occurred during sign in' };
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Sign out error:', error);
+      }
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
+
+  // Legacy methods for backward compatibility
+  const login = async (email: string, password: string, role: 'student' | 'admin'): Promise<boolean> => {
+    const result = await signIn(email, password);
+    return !result.error;
   };
 
   const logout = () => {
-    setCurrentUser(null);
-    setIsAuthenticated(false);
+    signOut();
   };
 
   const addCourse = (courseInput: CourseInput) => {
@@ -441,7 +561,6 @@ export const LMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const reorderItems = (courseId: string, type: string, parentId: string, newOrder: string[]) => {
     console.log(`Reordering ${type} items in ${parentId}:`, newOrder);
-    // Implementation for drag & drop reordering
   };
 
   const inviteStudent = (email: string, name: string, assignedCourses: string[] = []) => {
@@ -457,7 +576,6 @@ export const LMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     
     setStudents(prev => [...prev, newStudent]);
     console.log('Student invited:', newStudent);
-    // In a real app, this would send an email with login credentials
   };
 
   const updateStudent = (studentId: string, updates: Partial<Student>) => {
@@ -471,7 +589,6 @@ export const LMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const resetStudentPassword = (studentId: string): string => {
     const newPassword = Math.random().toString(36).slice(-8);
     console.log(`Password reset for student ${studentId}: ${newPassword}`);
-    // In a real app, this would send an email with the new password
     return newPassword;
   };
 
@@ -504,11 +621,14 @@ export const LMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   return (
     <LMSContext.Provider value={{
       currentUser,
+      session,
       courses,
       students,
       isAuthenticated,
-      login,
-      logout,
+      isLoading,
+      signUp,
+      signIn,
+      signOut,
       updateProgress,
       getCourseProgress,
       addCourse,
@@ -529,3 +649,5 @@ export const LMSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     </LMSContext.Provider>
   );
 };
+
+export default LMSProvider;

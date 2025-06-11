@@ -5,14 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useLMS } from '../../contexts/LMSContext';
+import { supabase } from '@/integrations/supabase/client';
 import { User, Camera, Lock, Save } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const StudentSettings = () => {
   const { currentUser } = useLMS();
+  const { toast } = useToast();
   const [profileData, setProfileData] = useState({
     name: currentUser?.name || '',
     email: currentUser?.email || '',
-    phone: ''
+    phone_number: currentUser?.phone_number || ''
   });
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -26,14 +29,34 @@ const StudentSettings = () => {
     setIsUpdating(true);
     
     try {
-      // In a real app, this would make an API call to update the profile
-      console.log('Updating profile:', profileData);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert('Profile updated successfully!');
-    } catch (error) {
+      if (!currentUser) {
+        throw new Error('No user logged in');
+      }
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: profileData.name,
+          email: profileData.email,
+          phone_number: profileData.phone_number
+        })
+        .eq('id', currentUser.id);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated."
+      });
+    } catch (error: any) {
       console.error('Profile update failed:', error);
-      alert('Failed to update profile. Please try again.');
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update profile. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsUpdating(false);
     }
@@ -43,31 +66,56 @@ const StudentSettings = () => {
     e.preventDefault();
     
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('New passwords do not match');
+      toast({
+        title: "Password Mismatch",
+        description: "New passwords do not match",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive"
+      });
       return;
     }
     
     setIsUpdating(true);
     
     try {
-      // In a real app, this would make an API call to reset the password
-      console.log('Resetting password');
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      alert('Password reset successfully!');
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Password Updated",
+        description: "Your password has been successfully updated."
+      });
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Password reset failed:', error);
-      alert('Failed to reset password. Please try again.');
+      toast({
+        title: "Password Update Failed",
+        description: error.message || "Failed to update password. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsUpdating(false);
     }
   };
 
   const handleProfilePictureUpdate = () => {
-    // In a real app, this would open a file picker and upload the image
-    console.log('Opening profile picture upload');
-    alert('Profile picture upload feature coming soon!');
+    toast({
+      title: "Coming Soon",
+      description: "Profile picture upload feature will be available soon!"
+    });
   };
 
   return (
@@ -88,7 +136,15 @@ const StudentSettings = () => {
         <CardContent>
           <div className="flex items-center space-x-4">
             <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
-              <User className="w-10 h-10 text-white" />
+              {currentUser?.profile_picture_url ? (
+                <img 
+                  src={currentUser.profile_picture_url} 
+                  alt="Profile" 
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <User className="w-10 h-10 text-white" />
+              )}
             </div>
             <Button
               onClick={handleProfilePictureUpdate}
@@ -135,8 +191,8 @@ const StudentSettings = () => {
               <Label htmlFor="phone">Phone Number</Label>
               <Input
                 id="phone"
-                value={profileData.phone}
-                onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                value={profileData.phone_number}
+                onChange={(e) => setProfileData({ ...profileData, phone_number: e.target.value })}
                 placeholder="Enter your phone number"
               />
             </div>
@@ -161,16 +217,6 @@ const StudentSettings = () => {
         <CardContent>
           <form onSubmit={handlePasswordReset} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="currentPassword">Current Password</Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                value={passwordData.currentPassword}
-                onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                placeholder="Enter current password"
-              />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="newPassword">New Password</Label>
               <Input
                 id="newPassword"
@@ -178,6 +224,7 @@ const StudentSettings = () => {
                 value={passwordData.newPassword}
                 onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                 placeholder="Enter new password"
+                minLength={6}
               />
             </div>
             <div className="space-y-2">
@@ -188,6 +235,7 @@ const StudentSettings = () => {
                 value={passwordData.confirmPassword}
                 onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                 placeholder="Confirm new password"
+                minLength={6}
               />
             </div>
             <Button 
@@ -196,7 +244,7 @@ const StudentSettings = () => {
               className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
             >
               <Lock className="w-4 h-4 mr-2" />
-              {isUpdating ? 'Updating...' : 'Reset Password'}
+              {isUpdating ? 'Updating...' : 'Update Password'}
             </Button>
           </form>
         </CardContent>

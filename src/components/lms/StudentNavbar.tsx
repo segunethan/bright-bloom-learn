@@ -6,12 +6,12 @@ import { useLMS } from '../../contexts/LMSContext';
 import { User, Book, Settings } from 'lucide-react';
 
 const StudentNavbar = () => {
-  const { currentUser, logout } = useLMS();
+  const { currentUser, signOut } = useLMS();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     navigate('/lms');
   };
 
@@ -67,7 +67,7 @@ const StudentNavbar = () => {
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <User className="w-4 h-4" />
-              <span>{currentUser?.name}</span>
+              <span>{currentUser?.name || currentUser?.email}</span>
             </div>
             <Button
               variant="outline"

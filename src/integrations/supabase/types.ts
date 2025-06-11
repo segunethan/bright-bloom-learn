@@ -9,7 +9,114 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      courses: {
+        Row: {
+          completion_rate: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          title: string
+          total_modules: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          completion_rate?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          title: string
+          total_modules?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          completion_rate?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          title?: string
+          total_modules?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      enrollments: {
+        Row: {
+          course_id: string | null
+          enrolled_at: string | null
+          id: string
+          is_active: boolean | null
+          progress: number | null
+          student_id: string | null
+        }
+        Insert: {
+          course_id?: string | null
+          enrolled_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          progress?: number | null
+          student_id?: string | null
+        }
+        Update: {
+          course_id?: string | null
+          enrolled_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          progress?: number | null
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          is_active: boolean | null
+          name: string | null
+          phone_number: string | null
+          profile_picture_url: string | null
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id: string
+          is_active?: boolean | null
+          name?: string | null
+          phone_number?: string | null
+          profile_picture_url?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string | null
+          phone_number?: string | null
+          profile_picture_url?: string | null
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
