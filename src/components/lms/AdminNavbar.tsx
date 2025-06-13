@@ -6,12 +6,12 @@ import { useLMS } from '../../contexts/LMSContext';
 import { Settings, Book, User } from 'lucide-react';
 
 const AdminNavbar = () => {
-  const { currentUser, logout } = useLMS();
+  const { currentUser, signOut } = useLMS();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     navigate('/lms');
   };
 

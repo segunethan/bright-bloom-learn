@@ -1,19 +1,61 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useLMS } from '../../contexts/LMSContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Book, Clock, User } from 'lucide-react';
 
 const StudentCourses = () => {
-  const { courses, currentUser, getCourseProgress } = useLMS();
+  const { courses, currentUser } = useLMS();
   const navigate = useNavigate();
+  const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const enrolledCourses = courses.filter(course => 
-    currentUser?.enrolledCourses.includes(course.id)
-  );
+  useEffect(() => {
+    const fetchEnrolledCourses = async () => {
+      if (!currentUser?.id) return;
+
+      try {
+        const { data: enrollments, error } = await supabase
+          .from('enrollments')
+          .select(`
+            *,
+            courses (*)
+          `)
+          .eq('student_id', currentUser.id)
+          .eq('is_active', true);
+
+        if (error) {
+          console.error('Error fetching enrollments:', error);
+          return;
+        }
+
+        setEnrolledCourses(enrollments || []);
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEnrolledCourses();
+  }, [currentUser?.id]);
+
+  const getCourseProgress = (courseId: string) => {
+    const enrollment = enrolledCourses.find(e => e.course_id === courseId);
+    return enrollment?.progress || 0;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-600">Loading courses...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -25,8 +67,9 @@ const StudentCourses = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {enrolledCourses.map((course) => {
-          const progress = getCourseProgress(course.id);
+        {enrolledCourses.map((enrollment) => {
+          const course = enrollment.courses;
+          const progress = enrollment.progress || 0;
           return (
             <Card key={course.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm hover:scale-105">
               <CardHeader className="pb-4">
@@ -57,11 +100,11 @@ const StudentCourses = () => {
                 <div className="flex items-center justify-between text-sm text-gray-500">
                   <div className="flex items-center">
                     <User className="w-4 h-4 mr-1" />
-                    <span>{course.sections.length} sections</span>
+                    <span>Course</span>
                   </div>
                   <div className="flex items-center">
                     <Clock className="w-4 h-4 mr-1" />
-                    <span>{course.totalModules} modules</span>
+                    <span>{course.total_modules} modules</span>
                   </div>
                 </div>
 
