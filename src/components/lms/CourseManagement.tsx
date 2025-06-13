@@ -17,50 +17,15 @@ const CourseManagement = () => {
     description: ''
   });
 
-  const handleCreateCourse = () => {
+  const handleCreateCourse = async () => {
     if (newCourse.title && newCourse.description) {
       const courseData = {
         title: newCourse.title,
         description: newCourse.description,
-        sections: [
-          {
-            id: 's1',
-            title: 'Introduction',
-            order: 1,
-            chapters: [
-              {
-                id: 'c1',
-                title: 'Getting Started',
-                order: 1,
-                modules: [
-                  {
-                    id: 'm1',
-                    title: 'Course Overview',
-                    order: 1,
-                    submodules: [
-                      {
-                        id: 'sm1',
-                        title: 'Course Overview',
-                        type: 'video+text' as const,
-                        textContent: 'Welcome to this comprehensive course. This module will introduce you to the key concepts and learning objectives.',
-                        videoUrl: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-                        isCompleted: false,
-                        duration: 10,
-                        status: 'published' as const,
-                        order: 1
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        totalModules: 1,
-        completionRate: 0
+        totalModules: 1
       };
       
-      addCourse(courseData);
+      await addCourse(courseData);
       console.log('Creating course:', courseData);
       setIsCreating(false);
       setNewCourse({ title: '', description: '' });
@@ -161,15 +126,15 @@ const CourseManagement = () => {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <div className="text-center">
-                  <div className="font-medium text-gray-800">{course.sections.length}</div>
+                  <div className="font-medium text-gray-800">0</div>
                   <div className="text-gray-500">Sections</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-medium text-gray-800">{course.totalModules}</div>
+                  <div className="font-medium text-gray-800">{course.total_modules}</div>
                   <div className="text-gray-500">Modules</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-medium text-gray-800">24</div>
+                  <div className="font-medium text-gray-800">0</div>
                   <div className="text-gray-500">Students</div>
                 </div>
               </div>

@@ -12,12 +12,25 @@ interface LMSContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   courses: Course[];
+  students: Profile[];
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signUp: (email: string, password: string, name: string, role: 'student' | 'admin') => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error?: string }>;
   resetPassword: (email: string) => Promise<{ error?: string }>;
   getCourseProgress: (courseId: string) => number;
+  addCourse: (courseData: any) => Promise<void>;
+  addSection: (courseId: string, sectionData: any) => Promise<void>;
+  addChapter: (courseId: string, sectionId: string, chapterData: any) => Promise<void>;
+  addModule: (courseId: string, sectionId: string, chapterId: string, moduleData: any) => Promise<void>;
+  addSubmodule: (courseId: string, sectionId: string, chapterId: string, moduleId: string, submoduleData: any) => Promise<void>;
+  updateSubmodule: (courseId: string, sectionId: string, chapterId: string, moduleId: string, submoduleId: string, submoduleData: any) => Promise<void>;
+  updateProgress: (courseId: string, submoduleId: string) => Promise<void>;
+  inviteStudent: (email: string, name: string) => Promise<{ error?: string }>;
+  updateStudent: (studentId: string, updates: Partial<Profile>) => Promise<{ error?: string }>;
+  resetStudentPassword: (email: string) => Promise<{ error?: string }>;
+  assignCourseToStudent: (studentId: string, courseId: string) => Promise<{ error?: string }>;
+  unassignCourseFromStudent: (studentId: string, courseId: string) => Promise<{ error?: string }>;
 }
 
 const LMSContext = createContext<LMSContextType | undefined>(undefined);
@@ -35,6 +48,7 @@ export const LMSProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [students, setStudents] = useState<Profile[]>([]);
 
   // Load user session and profile
   useEffect(() => {
@@ -71,9 +85,10 @@ export const LMSProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Load courses
+  // Load courses and students
   useEffect(() => {
     loadCourses();
+    loadStudents();
   }, []);
 
   const loadUserProfile = async (user: User) => {
@@ -137,6 +152,25 @@ export const LMSProvider = ({ children }: { children: ReactNode }) => {
       setCourses(coursesData || []);
     } catch (error) {
       console.error('Error loading courses:', error);
+    }
+  };
+
+  const loadStudents = async () => {
+    try {
+      const { data: studentsData, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'student')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading students:', error);
+        return;
+      }
+
+      setStudents(studentsData || []);
+    } catch (error) {
+      console.error('Error loading students:', error);
     }
   };
 
@@ -237,17 +271,150 @@ export const LMSProvider = ({ children }: { children: ReactNode }) => {
     return 0;
   };
 
+  // Placeholder functions for course management (would need additional database tables)
+  const addCourse = async (courseData: any): Promise<void> => {
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .insert([{
+          title: courseData.title,
+          description: courseData.description,
+          total_modules: courseData.totalModules || 1
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding course:', error);
+        return;
+      }
+
+      if (data) {
+        setCourses(prev => [data, ...prev]);
+      }
+    } catch (error) {
+      console.error('Error adding course:', error);
+    }
+  };
+
+  // Placeholder functions for sections/chapters/modules (would need additional database tables)
+  const addSection = async (courseId: string, sectionData: any): Promise<void> => {
+    console.log('Add section placeholder:', courseId, sectionData);
+  };
+
+  const addChapter = async (courseId: string, sectionId: string, chapterData: any): Promise<void> => {
+    console.log('Add chapter placeholder:', courseId, sectionId, chapterData);
+  };
+
+  const addModule = async (courseId: string, sectionId: string, chapterId: string, moduleData: any): Promise<void> => {
+    console.log('Add module placeholder:', courseId, sectionId, chapterId, moduleData);
+  };
+
+  const addSubmodule = async (courseId: string, sectionId: string, chapterId: string, moduleId: string, submoduleData: any): Promise<void> => {
+    console.log('Add submodule placeholder:', courseId, sectionId, chapterId, moduleId, submoduleData);
+  };
+
+  const updateSubmodule = async (courseId: string, sectionId: string, chapterId: string, moduleId: string, submoduleId: string, submoduleData: any): Promise<void> => {
+    console.log('Update submodule placeholder:', courseId, sectionId, chapterId, moduleId, submoduleId, submoduleData);
+  };
+
+  const updateProgress = async (courseId: string, submoduleId: string): Promise<void> => {
+    console.log('Update progress placeholder:', courseId, submoduleId);
+  };
+
+  const inviteStudent = async (email: string, name: string): Promise<{ error?: string }> => {
+    console.log('Invite student placeholder:', email, name);
+    return {};
+  };
+
+  const updateStudent = async (studentId: string, updates: Partial<Profile>): Promise<{ error?: string }> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', studentId)
+        .select()
+        .single();
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      if (data) {
+        setStudents(prev => prev.map(student => student.id === studentId ? data : student));
+      }
+
+      return {};
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
+  };
+
+  const resetStudentPassword = async (email: string): Promise<{ error?: string }> => {
+    return await resetPassword(email);
+  };
+
+  const assignCourseToStudent = async (studentId: string, courseId: string): Promise<{ error?: string }> => {
+    try {
+      const { error } = await supabase
+        .from('enrollments')
+        .insert([{
+          student_id: studentId,
+          course_id: courseId
+        }]);
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return {};
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
+  };
+
+  const unassignCourseFromStudent = async (studentId: string, courseId: string): Promise<{ error?: string }> => {
+    try {
+      const { error } = await supabase
+        .from('enrollments')
+        .update({ is_active: false })
+        .eq('student_id', studentId)
+        .eq('course_id', courseId);
+
+      if (error) {
+        return { error: error.message };
+      }
+
+      return {};
+    } catch (error) {
+      return { error: 'An unexpected error occurred' };
+    }
+  };
+
   const value: LMSContextType = {
     currentUser,
     isAuthenticated,
     isLoading,
     courses,
+    students,
     signIn,
     signUp,
     signOut,
     updateProfile,
     resetPassword,
     getCourseProgress,
+    addCourse,
+    addSection,
+    addChapter,
+    addModule,
+    addSubmodule,
+    updateSubmodule,
+    updateProgress,
+    inviteStudent,
+    updateStudent,
+    resetStudentPassword,
+    assignCourseToStudent,
+    unassignCourseFromStudent,
   };
 
   return (

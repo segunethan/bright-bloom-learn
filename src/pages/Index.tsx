@@ -66,7 +66,7 @@ const Index = () => {
                 <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
                   <div className="flex items-center">
                     <Clock className="w-4 h-4 mr-1" />
-                    <span>{course.totalModules} lessons</span>
+                    <span>{course.total_modules} lessons</span>
                   </div>
                   <div className="flex items-center">
                     <Users className="w-4 h-4 mr-1" />
