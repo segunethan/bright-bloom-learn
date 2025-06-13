@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,18 +7,81 @@ import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useLMS } from '../../contexts/LMSContext';
+import { supabase } from '@/integrations/supabase/client';
 import { User, Plus, Search, Settings, Mail, Key, BookOpen, UserX } from 'lucide-react';
 
+interface StudentWithEnrollments {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  phone_number: string | null;
+  profile_picture_url: string | null;
+  enrolledCourses: string[];
+  progress: number;
+}
+
 const StudentManagement = () => {
-  const { students, courses, inviteStudent, updateStudent, resetStudentPassword, assignCourseToStudent, unassignCourseFromStudent } = useLMS();
+  const { courses, inviteStudent, updateStudent, resetStudentPassword, assignCourseToStudent, unassignCourseFromStudent } = useLMS();
+  const [students, setStudents] = useState<StudentWithEnrollments[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isInviting, setIsInviting] = useState(false);
   const [managingStudent, setManagingStudent] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [newStudent, setNewStudent] = useState({
     email: '',
     name: '',
     assignedCourses: [] as string[]
   });
+
+  useEffect(() => {
+    loadStudentsWithEnrollments();
+  }, []);
+
+  const loadStudentsWithEnrollments = async () => {
+    try {
+      const { data: studentsData, error: studentsError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'student')
+        .order('created_at', { ascending: false });
+
+      if (studentsError) {
+        console.error('Error loading students:', studentsError);
+        return;
+      }
+
+      const studentsWithEnrollments = await Promise.all(
+        (studentsData || []).map(async (student) => {
+          const { data: enrollments } = await supabase
+            .from('enrollments')
+            .select('course_id, progress')
+            .eq('student_id', student.id)
+            .eq('is_active', true);
+
+          const enrolledCourses = enrollments?.map(e => e.course_id) || [];
+          const avgProgress = enrollments?.length 
+            ? enrollments.reduce((sum, e) => sum + (e.progress || 0), 0) / enrollments.length
+            : 0;
+
+          return {
+            ...student,
+            enrolledCourses,
+            progress: Math.round(avgProgress)
+          };
+        })
+      );
+
+      setStudents(studentsWithEnrollments);
+    } catch (error) {
+      console.error('Error loading students with enrollments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredStudents = students.filter(student =>
     student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -27,7 +90,7 @@ const StudentManagement = () => {
 
   const handleInviteStudent = () => {
     if (newStudent.email && newStudent.name) {
-      inviteStudent(newStudent.email, newStudent.name, newStudent.assignedCourses);
+      inviteStudent(newStudent.email, newStudent.name);
       setIsInviting(false);
       setNewStudent({ email: '', name: '', assignedCourses: [] });
       alert(`Student invited successfully! Default password: temp123`);
@@ -38,13 +101,18 @@ const StudentManagement = () => {
     setManagingStudent(managingStudent === studentId ? null : studentId);
   };
 
-  const handleResetPassword = (studentId: string, studentName: string) => {
-    const newPassword = resetStudentPassword(studentId);
-    alert(`Password reset for ${studentName}. New password: ${newPassword}`);
+  const handleResetPassword = (studentEmail: string, studentName: string) => {
+    resetStudentPassword(studentEmail);
+    alert(`Password reset email sent to ${studentName}.`);
   };
 
   const handleToggleStudentStatus = (studentId: string, currentStatus: boolean) => {
-    updateStudent(studentId, { isActive: !currentStatus });
+    updateStudent(studentId, { is_active: !currentStatus });
+    setStudents(prev => prev.map(student => 
+      student.id === studentId 
+        ? { ...student, is_active: !currentStatus }
+        : student
+    ));
   };
 
   const handleCourseAssignment = (studentId: string, courseId: string, isAssigned: boolean) => {
@@ -53,6 +121,17 @@ const StudentManagement = () => {
     } else {
       assignCourseToStudent(studentId, courseId);
     }
+    
+    setStudents(prev => prev.map(student => 
+      student.id === studentId 
+        ? {
+            ...student,
+            enrolledCourses: isAssigned 
+              ? student.enrolledCourses.filter(id => id !== courseId)
+              : [...student.enrolledCourses, courseId]
+          }
+        : student
+    ));
   };
 
   const handleCourseSelection = (courseId: string, isSelected: boolean) => {
@@ -68,6 +147,14 @@ const StudentManagement = () => {
       }));
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-600">Loading students...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -183,14 +270,14 @@ const StudentManagement = () => {
                   <div>
                     <h3 className="text-lg font-semibold text-gray-800">{student.name}</h3>
                     <p className="text-sm text-gray-600">{student.email}</p>
-                    <p className="text-xs text-gray-500">Last login: {student.lastLogin}</p>
+                    <p className="text-xs text-gray-500">Member since: {new Date(student.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-4">
                   <div className="text-right">
-                    <Badge variant={student.isActive ? "default" : "secondary"}>
-                      {student.isActive ? "Active" : "Inactive"}
+                    <Badge variant={student.is_active ? "default" : "secondary"}>
+                      {student.is_active ? "Active" : "Inactive"}
                     </Badge>
                     <p className="text-sm text-gray-600 mt-1">
                       {student.enrolledCourses.length} course{student.enrolledCourses.length !== 1 ? 's' : ''}
@@ -217,7 +304,7 @@ const StudentManagement = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Button
                       variant="outline"
-                      onClick={() => handleResetPassword(student.id, student.name)}
+                      onClick={() => handleResetPassword(student.email, student.name)}
                       className="w-full"
                     >
                       <Key className="w-4 h-4 mr-2" />
@@ -226,11 +313,11 @@ const StudentManagement = () => {
                     
                     <Button
                       variant="outline"
-                      onClick={() => handleToggleStudentStatus(student.id, student.isActive)}
+                      onClick={() => handleToggleStudentStatus(student.id, student.is_active)}
                       className="w-full"
                     >
                       <UserX className="w-4 h-4 mr-2" />
-                      {student.isActive ? 'Deactivate' : 'Activate'}
+                      {student.is_active ? 'Deactivate' : 'Activate'}
                     </Button>
                     
                     <Button variant="outline" className="w-full">
