@@ -107,7 +107,7 @@ export const useAuth = () => {
   const signUp = async (email: string, password: string, name: string, role: 'student' | 'admin'): Promise<{ error?: string }> => {
     try {
       // Get the current site URL for email confirmation redirect
-      const redirectUrl = `${window.location.origin}/lms/admin/login`;
+      const redirectUrl = `${window.location.origin}/lms/${role}/login`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -177,18 +177,26 @@ export const useAuth = () => {
 
   const resetPassword = async (email: string): Promise<{ error?: string }> => {
     try {
-      const redirectUrl = `${window.location.origin}/lms/admin/login`;
+      // Use the current page URL as the redirect base
+      const currentUrl = window.location.href;
+      const baseUrl = currentUrl.split('/lms/')[0];
+      const redirectUrl = `${baseUrl}/lms/admin/login`;
+      
+      console.log('Sending password reset email with redirect URL:', redirectUrl);
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl
       });
 
       if (error) {
+        console.error('Password reset error:', error);
         return { error: error.message };
       }
 
+      console.log('Password reset email sent successfully');
       return {};
     } catch (error) {
+      console.error('Unexpected error during password reset:', error);
       return { error: 'An unexpected error occurred' };
     }
   };

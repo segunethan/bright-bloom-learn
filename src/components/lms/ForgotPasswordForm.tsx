@@ -21,17 +21,31 @@ const ForgotPasswordForm = ({ onBack, userType }: ForgotPasswordFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email.trim()) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     
     try {
+      console.log('Attempting password reset for:', email);
       const result = await resetPassword(email);
+      
       if (result.error) {
+        console.error('Password reset failed:', result.error);
         toast({
           title: "Reset Failed",
           description: result.error,
           variant: "destructive"
         });
       } else {
+        console.log('Password reset successful');
         setIsSuccess(true);
         toast({
           title: "Reset Email Sent",
@@ -39,7 +53,7 @@ const ForgotPasswordForm = ({ onBack, userType }: ForgotPasswordFormProps) => {
         });
       }
     } catch (error) {
-      console.error('Password reset failed:', error);
+      console.error('Password reset failed with exception:', error);
       toast({
         title: "Reset Failed",
         description: "An unexpected error occurred. Please try again.",
@@ -59,7 +73,7 @@ const ForgotPasswordForm = ({ onBack, userType }: ForgotPasswordFormProps) => {
           </div>
           <CardTitle className="text-2xl text-green-600">Check Your Email</CardTitle>
           <CardDescription className="text-center">
-            We've sent password reset instructions to your email address.
+            We've sent password reset instructions to <strong>{email}</strong>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -73,6 +87,12 @@ const ForgotPasswordForm = ({ onBack, userType }: ForgotPasswordFormProps) => {
               <li>Create a new password</li>
               <li>Return here to sign in with your new password</li>
             </ol>
+          </div>
+          
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+            <p className="text-xs text-amber-700">
+              <strong>Note:</strong> The reset link will expire in 1 hour for security reasons.
+            </p>
           </div>
           
           <Button 
@@ -112,6 +132,7 @@ const ForgotPasswordForm = ({ onBack, userType }: ForgotPasswordFormProps) => {
                 onChange={(e) => setEmail(e.target.value)}
                 className="pl-10"
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -133,6 +154,7 @@ const ForgotPasswordForm = ({ onBack, userType }: ForgotPasswordFormProps) => {
             onClick={onBack}
             variant="outline" 
             className="w-full"
+            disabled={isLoading}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Sign In
