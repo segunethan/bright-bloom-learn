@@ -106,19 +106,30 @@ export const useAuth = () => {
 
   const signUp = async (email: string, password: string, name: string, role: 'student' | 'admin'): Promise<{ error?: string }> => {
     try {
-      const { error } = await supabase.auth.signUp({
+      // Get the current site URL for email confirmation redirect
+      const redirectUrl = `${window.location.origin}/lms/admin/login`;
+      
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             name,
             role
-          }
+          },
+          emailRedirectTo: redirectUrl
         }
       });
 
       if (error) {
         return { error: error.message };
+      }
+
+      // Check if user needs to confirm email
+      if (data.user && !data.user.email_confirmed_at) {
+        return { 
+          error: 'Please check your email and click the confirmation link to complete your registration. You may need to check your spam folder.' 
+        };
       }
 
       return {};
@@ -166,7 +177,11 @@ export const useAuth = () => {
 
   const resetPassword = async (email: string): Promise<{ error?: string }> => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const redirectUrl = `${window.location.origin}/lms/admin/login`;
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: redirectUrl
+      });
 
       if (error) {
         return { error: error.message };

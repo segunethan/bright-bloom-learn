@@ -6,13 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLMS } from '../../contexts/LMSContext';
-import { Settings, Lock, Mail, User } from 'lucide-react';
+import { Settings, Lock, Mail, User, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const AdminLogin = () => {
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [signupData, setSignupData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [isLoading, setIsLoading] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
   const { signIn, signUp, isAuthenticated, currentUser } = useLMS();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -83,19 +84,30 @@ const AdminLogin = () => {
     try {
       const result = await signUp(signupData.email, signupData.password, signupData.name, 'admin');
       if (result.error) {
-        toast({
-          title: "Sign Up Failed",
-          description: result.error,
-          variant: "destructive"
-        });
+        if (result.error.includes('check your email')) {
+          setSignupSuccess(true);
+          toast({
+            title: "Registration Successful!",
+            description: result.error,
+            duration: 10000
+          });
+        } else {
+          toast({
+            title: "Sign Up Failed",
+            description: result.error,
+            variant: "destructive"
+          });
+        }
       } else {
+        setSignupSuccess(true);
         toast({
           title: "Admin Account Created!",
-          description: "Please check your email to verify your account."
+          description: "Please check your email to verify your account before signing in.",
+          duration: 10000
         });
-        // Clear form
-        setSignupData({ name: '', email: '', password: '', confirmPassword: '' });
       }
+      // Clear form
+      setSignupData({ name: '', email: '', password: '', confirmPassword: '' });
     } catch (error) {
       console.error('Admin sign up failed:', error);
       toast({
@@ -107,6 +119,46 @@ const AdminLogin = () => {
       setIsLoading(false);
     }
   };
+
+  if (signupSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500 rounded-full mb-4 mx-auto">
+                <CheckCircle className="w-8 h-8 text-white" />
+              </div>
+              <CardTitle className="text-2xl text-green-600">Check Your Email</CardTitle>
+              <CardDescription className="text-center">
+                We've sent a verification link to your email address. Please click the link to verify your account and complete the registration process.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-700">
+                  <strong>Next steps:</strong>
+                </p>
+                <ol className="text-sm text-blue-700 mt-2 space-y-1 list-decimal list-inside">
+                  <li>Check your email inbox (and spam folder)</li>
+                  <li>Click the verification link in the email</li>
+                  <li>Return here to sign in with your credentials</li>
+                </ol>
+              </div>
+              
+              <Button 
+                onClick={() => setSignupSuccess(false)}
+                variant="outline" 
+                className="w-full"
+              >
+                Back to Sign In
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -257,6 +309,12 @@ const AdminLogin = () => {
                         minLength={6}
                       />
                     </div>
+                  </div>
+
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <p className="text-xs text-amber-700">
+                      <strong>Note:</strong> You'll receive an email verification link after registration. Please check your email (including spam folder) to verify your account.
+                    </p>
                   </div>
 
                   <Button 
