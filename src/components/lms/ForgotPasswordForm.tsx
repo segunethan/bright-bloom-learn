@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Mail, ArrowLeft, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useLMS } from '../../contexts/LMSContext';
 
@@ -26,6 +26,17 @@ const ForgotPasswordForm = ({ onBack, userType }: ForgotPasswordFormProps) => {
       toast({
         title: "Email Required",
         description: "Please enter your email address.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
         variant: "destructive"
       });
       return;
@@ -83,16 +94,24 @@ const ForgotPasswordForm = ({ onBack, userType }: ForgotPasswordFormProps) => {
             </p>
             <ol className="text-sm text-blue-700 mt-2 space-y-1 list-decimal list-inside">
               <li>Check your email inbox (and spam folder)</li>
-              <li>Click the reset link in the email</li>
-              <li>Create a new password</li>
-              <li>Return here to sign in with your new password</li>
+              <li>Click the "Reset Password" button in the email</li>
+              <li>You'll be redirected back here to set a new password</li>
+              <li>Sign in with your new password</li>
             </ol>
           </div>
           
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-            <p className="text-xs text-amber-700">
-              <strong>Note:</strong> The reset link will expire in 1 hour for security reasons.
-            </p>
+            <div className="flex items-start space-x-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-xs text-amber-700">
+                  <strong>Important:</strong> The reset link will expire in 1 hour for security reasons.
+                </p>
+                <p className="text-xs text-amber-700 mt-1">
+                  If you don't see the email, please check your spam/junk folder.
+                </p>
+              </div>
+            </div>
           </div>
           
           <Button 
@@ -135,6 +154,12 @@ const ForgotPasswordForm = ({ onBack, userType }: ForgotPasswordFormProps) => {
                 disabled={isLoading}
               />
             </div>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-xs text-blue-700">
+              <strong>Note:</strong> Make sure to enter the email address associated with your {userType} account.
+            </p>
           </div>
 
           <Button 

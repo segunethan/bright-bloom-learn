@@ -177,15 +177,27 @@ export const useAuth = () => {
 
   const resetPassword = async (email: string): Promise<{ error?: string }> => {
     try {
-      // Use the current page URL as the redirect base
+      // Determine the correct redirect URL based on current location or email domain
       const currentUrl = window.location.href;
-      const baseUrl = currentUrl.split('/lms/')[0];
-      const redirectUrl = `${baseUrl}/lms/admin/login`;
+      let redirectUrl;
+      
+      // If we're on admin login page or the email suggests admin, redirect to admin login
+      if (currentUrl.includes('/admin/login') || email.toLowerCase().includes('admin')) {
+        redirectUrl = `${window.location.origin}/lms/admin/login`;
+      } else {
+        // Default to student login
+        redirectUrl = `${window.location.origin}/lms/student/login`;
+      }
       
       console.log('Sending password reset email with redirect URL:', redirectUrl);
+      console.log('Reset password for email:', email);
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl
+        redirectTo: redirectUrl,
+        // Add additional options to ensure email delivery
+        options: {
+          emailRedirectTo: redirectUrl,
+        }
       });
 
       if (error) {
