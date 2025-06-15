@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -8,12 +7,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLMS } from '../../contexts/LMSContext';
 import { Settings, Lock, Mail, User, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import ForgotPasswordForm from './ForgotPasswordForm';
 
 const AdminLogin = () => {
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [signupData, setSignupData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [signupSuccess, setSignupSuccess] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const { signIn, signUp, isAuthenticated, currentUser } = useLMS();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -119,6 +120,28 @@ const AdminLogin = () => {
       setIsLoading(false);
     }
   };
+
+  if (showForgotPassword) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full mb-4">
+              <Settings className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-600 bg-clip-text text-transparent">
+              Admin Portal
+            </h1>
+            <p className="text-gray-600 mt-2">Reset your admin password</p>
+          </div>
+          <ForgotPasswordForm 
+            onBack={() => setShowForgotPassword(false)} 
+            userType="admin"
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (signupSuccess) {
     return (
@@ -233,6 +256,17 @@ const AdminLogin = () => {
                     {isLoading ? 'Signing in...' : 'Access Admin Panel'}
                   </Button>
                 </form>
+
+                <div className="text-center">
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-purple-600 hover:text-purple-700 text-sm"
+                  >
+                    Forgot your password?
+                  </Button>
+                </div>
               </TabsContent>
 
               <TabsContent value="signup" className="space-y-4 mt-4">
