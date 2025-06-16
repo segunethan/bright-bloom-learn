@@ -3,11 +3,14 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLMS } from '../../contexts/LMSContext';
+import SectionManager from './SectionManager';
 import { 
   ArrowLeft, 
-  Plus, 
   BookOpen,
+  Settings,
+  Users
 } from 'lucide-react';
 
 const CourseEditor = () => {
@@ -30,10 +33,6 @@ const CourseEditor = () => {
     );
   }
 
-  const handleAddSection = () => {
-    alert('Course content editing functionality will be implemented soon. For now, this is a placeholder interface.');
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-purple-50">
       {/* Header */}
@@ -54,37 +53,71 @@ const CourseEditor = () => {
                 <p className="text-gray-600">Course Content Editor</p>
               </div>
             </div>
-            <Button
-              onClick={handleAddSection}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Section
-            </Button>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="space-y-4">
-          <div className="text-center py-12">
-            <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Course Structure Coming Soon</h3>
-            <p className="text-gray-600 mb-4">
-              The course content editor with sections, chapters, and modules will be implemented in the next phase.
-            </p>
-            <p className="text-gray-600 mb-4">
-              Current course: <strong>{course.title}</strong>
-            </p>
-            <Button
-              onClick={handleAddSection}
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Start Building Content
-            </Button>
-          </div>
-        </div>
+        <Tabs defaultValue="content" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="content" className="flex items-center space-x-2">
+              <BookOpen className="w-4 h-4" />
+              <span>Content</span>
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center space-x-2">
+              <Settings className="w-4 h-4" />
+              <span>Settings</span>
+            </TabsTrigger>
+            <TabsTrigger value="students" className="flex items-center space-x-2">
+              <Users className="w-4 h-4" />
+              <span>Students</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="content">
+            <SectionManager courseId={courseId!} />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <Card className="border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle>Course Settings</CardTitle>
+                <CardDescription>
+                  Manage course details and configuration
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12">
+                  <Settings className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Course Settings Coming Soon</h3>
+                  <p className="text-gray-600">
+                    Advanced course configuration options will be available in the next update.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="students">
+            <Card className="border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle>Enrolled Students</CardTitle>
+                <CardDescription>
+                  View and manage students enrolled in this course
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12">
+                  <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Student Management Coming Soon</h3>
+                  <p className="text-gray-600">
+                    Course-specific student management features will be available in the next update.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

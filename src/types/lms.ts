@@ -1,9 +1,12 @@
 
 import { Database } from '@/integrations/supabase/types';
+import { Section, SectionResource, Chapter, Module, Submodule } from './section';
 
 export type Profile = Database['public']['Tables']['profiles']['Row'];
 export type Course = Database['public']['Tables']['courses']['Row'];
 export type Enrollment = Database['public']['Tables']['enrollments']['Row'];
+
+export { Section, SectionResource, Chapter, Module, Submodule };
 
 export interface LMSContextType {
   currentUser: Profile | null;

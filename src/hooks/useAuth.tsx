@@ -193,11 +193,7 @@ export const useAuth = () => {
       console.log('Reset password for email:', email);
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
-        // Add additional options to ensure email delivery
-        options: {
-          emailRedirectTo: redirectUrl,
-        }
+        redirectTo: redirectUrl
       });
 
       if (error) {
