@@ -44,54 +44,40 @@ const SectionManager: React.FC<SectionManagerProps> = ({ courseId }) => {
 
   const loadSections = async () => {
     try {
-      // Query sections using raw SQL through rpc or direct table access
-      const { data: sectionsData, error } = await supabase
-        .rpc('get_course_sections', { p_course_id: courseId })
-        .then(result => {
-          // If the RPC doesn't exist, fall back to direct query
-          if (result.error) {
-            return supabase
-              .from('sections')
-              .select('*')
-              .eq('course_id', courseId)
-              .order('order_index', { ascending: true });
-          }
-          return result;
-        })
-        .catch(() => {
-          // Direct query fallback
-          return supabase
-            .from('sections')
-            .select('*')
-            .eq('course_id', courseId)
-            .order('order_index', { ascending: true });
-        });
+      // Query sections directly from the table
+      const { data: sectionsData, error: sectionsError } = await supabase
+        .from('sections')
+        .select('*')
+        .eq('course_id', courseId)
+        .order('order_index', { ascending: true });
 
-      if (error) {
-        console.error('Error loading sections:', error);
+      if (sectionsError) {
+        console.error('Error loading sections:', sectionsError);
+        toast({
+          title: "Error",
+          description: "Failed to load sections",
+          variant: "destructive"
+        });
         return;
       }
 
-      const typedSections = sectionsData as Section[];
-      setSections(typedSections || []);
+      setSections(sectionsData || []);
       
       // Load resources for each section
-      if (typedSections && typedSections.length > 0) {
-        const resourcePromises = typedSections.map(async (section) => {
-          const { data: resourcesData } = await supabase
+      if (sectionsData && sectionsData.length > 0) {
+        const resourcePromises = sectionsData.map(async (section) => {
+          const { data: resourcesData, error: resourcesError } = await supabase
             .from('section_resources')
             .select('*')
             .eq('section_id', section.id)
-            .order('order_index', { ascending: true })
-            .then(result => {
-              if (result.error) {
-                console.error('Error loading resources for section:', section.id, result.error);
-                return { data: [] };
-              }
-              return result;
-            });
+            .order('order_index', { ascending: true });
           
-          return { sectionId: section.id, resources: (resourcesData as SectionResource[]) || [] };
+          if (resourcesError) {
+            console.error('Error loading resources for section:', section.id, resourcesError);
+            return { sectionId: section.id, resources: [] };
+          }
+          
+          return { sectionId: section.id, resources: resourcesData || [] };
         });
 
         const resourceResults = await Promise.all(resourcePromises);
@@ -150,8 +136,7 @@ const SectionManager: React.FC<SectionManagerProps> = ({ courseId }) => {
       }
 
       if (data) {
-        const typedData = data as Section;
-        setSections(prev => [...prev, typedData]);
+        setSections(prev => [...prev, data]);
         setNewSection({ title: '', description: '' });
         setIsCreating(false);
         toast({
