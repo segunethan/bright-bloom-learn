@@ -14,35 +14,41 @@ const StudentLogin = () => {
   const [signupData, setSignupData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const { signIn, signUp, isAuthenticated } = useLMS();
+  const { signIn, signUp, isAuthenticated, currentUser } = useLMS();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated as student
   React.useEffect(() => {
-    if (isAuthenticated) {
+    console.log('StudentLogin - Auth state:', { isAuthenticated, currentUser });
+    if (isAuthenticated && currentUser) {
+      console.log('User is authenticated, redirecting to dashboard');
       navigate('/lms/student');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, currentUser, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
+      console.log('Attempting login with:', loginData.email);
       const result = await signIn(loginData.email, loginData.password);
+      
       if (result.error) {
+        console.error('Login error:', result.error);
         toast({
           title: "Login Failed",
           description: result.error,
           variant: "destructive"
         });
       } else {
+        console.log('Login successful, auth should update automatically');
         toast({
           title: "Welcome back!",
           description: "You have been successfully logged in."
         });
-        navigate('/lms/student');
+        // Don't manually navigate here - let the useEffect handle it when auth state updates
       }
     } catch (error) {
       console.error('Login failed:', error);

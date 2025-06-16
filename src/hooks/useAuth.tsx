@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
@@ -13,6 +12,7 @@ export const useAuth = () => {
     const getSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('Initial session check:', session?.user?.id);
         
         if (session?.user) {
           await loadUserProfile(session.user);
@@ -33,6 +33,7 @@ export const useAuth = () => {
       if (session?.user) {
         await loadUserProfile(session.user);
       } else {
+        console.log('No session, clearing user state');
         setCurrentUser(null);
         setIsAuthenticated(false);
         setIsLoading(false);
@@ -44,6 +45,7 @@ export const useAuth = () => {
 
   const loadUserProfile = async (user: User) => {
     try {
+      console.log('Loading profile for user:', user.id);
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
@@ -57,9 +59,11 @@ export const useAuth = () => {
       }
 
       if (profile) {
+        console.log('Profile loaded:', profile);
         setCurrentUser(profile);
         setIsAuthenticated(true);
       } else {
+        console.log('No profile found, creating new one');
         const { data: newProfile, error: createError } = await supabase
           .from('profiles')
           .insert([
@@ -76,6 +80,7 @@ export const useAuth = () => {
         if (createError) {
           console.error('Error creating profile:', createError);
         } else if (newProfile) {
+          console.log('New profile created:', newProfile);
           setCurrentUser(newProfile);
           setIsAuthenticated(true);
         }
@@ -89,17 +94,21 @@ export const useAuth = () => {
 
   const signIn = async (email: string, password: string): Promise<{ error?: string }> => {
     try {
+      console.log('Signing in user:', email);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('Sign in error:', error.message);
         return { error: error.message };
       }
 
+      console.log('Sign in successful');
       return {};
     } catch (error) {
+      console.error('Unexpected sign in error:', error);
       return { error: 'An unexpected error occurred' };
     }
   };
