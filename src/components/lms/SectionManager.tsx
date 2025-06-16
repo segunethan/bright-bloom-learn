@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -77,7 +76,8 @@ const SectionManager: React.FC<SectionManagerProps> = ({ courseId }) => {
             return { sectionId: section.id, resources: [] };
           }
           
-          return { sectionId: section.id, resources: resourcesData || [] };
+          // Cast the data to SectionResource[] to handle the type issue
+          return { sectionId: section.id, resources: (resourcesData || []) as SectionResource[] };
         });
 
         const resourceResults = await Promise.all(resourcePromises);
