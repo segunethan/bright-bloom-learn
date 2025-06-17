@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, ArrowLeft, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useLMS } from '../../contexts/LMSContext';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ForgotPasswordFormProps {
   onBack: () => void;
@@ -16,7 +16,7 @@ const ForgotPasswordForm = ({ onBack, userType }: ForgotPasswordFormProps) => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const { resetPassword } = useLMS();
+  const { resetPassword } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -94,8 +94,9 @@ const ForgotPasswordForm = ({ onBack, userType }: ForgotPasswordFormProps) => {
             </p>
             <ol className="text-sm text-blue-700 mt-2 space-y-1 list-decimal list-inside">
               <li>Check your email inbox (and spam folder)</li>
-              <li>Click the "Reset Password" button in the email</li>
-              <li>You'll be redirected back here to set a new password</li>
+              <li>Click the "Reset Password" link in the email</li>
+              <li>You'll be redirected to a secure reset page</li>
+              <li>Enter and confirm your new password</li>
               <li>Sign in with your new password</li>
             </ol>
           </div>
@@ -109,6 +110,9 @@ const ForgotPasswordForm = ({ onBack, userType }: ForgotPasswordFormProps) => {
                 </p>
                 <p className="text-xs text-amber-700 mt-1">
                   If you don't see the email, please check your spam/junk folder.
+                </p>
+                <p className="text-xs text-amber-700 mt-1">
+                  Each reset link can only be used once. If you need to reset again, you'll need to request a new link.
                 </p>
               </div>
             </div>
@@ -132,7 +136,7 @@ const ForgotPasswordForm = ({ onBack, userType }: ForgotPasswordFormProps) => {
       <CardHeader className="text-center">
         <CardTitle className="text-2xl">Reset Password</CardTitle>
         <CardDescription>
-          Enter your email address and we'll send you a link to reset your password
+          Enter your email address and we'll send you a secure link to reset your password
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -159,6 +163,7 @@ const ForgotPasswordForm = ({ onBack, userType }: ForgotPasswordFormProps) => {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-xs text-blue-700">
               <strong>Note:</strong> Make sure to enter the email address associated with your {userType} account.
+              You'll receive a secure reset link that expires in 1 hour.
             </p>
           </div>
 

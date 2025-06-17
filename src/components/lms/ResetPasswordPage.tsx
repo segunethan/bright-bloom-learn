@@ -38,8 +38,12 @@ const ResetPasswordPage = () => {
         setTokenValid(false);
         
         let errorMessage = "This password reset link is invalid or has expired.";
-        if (error === 'access_denied' && errorDescription?.includes('expired')) {
-          errorMessage = "This password reset link has expired. Please request a new password reset.";
+        if (error === 'access_denied') {
+          if (errorDescription?.includes('expired')) {
+            errorMessage = "This password reset link has expired. Please request a new password reset.";
+          } else if (errorDescription?.includes('invalid')) {
+            errorMessage = "This password reset link is invalid. Please request a new password reset.";
+          }
         }
         
         toast({
@@ -187,6 +191,10 @@ const ResetPasswordPage = () => {
     }
   };
 
+  const handleRequestNewReset = () => {
+    navigate('/lms', { replace: true });
+  };
+
   // Show loading state while verifying token
   if (tokenValid === null) {
     return (
@@ -211,16 +219,28 @@ const ResetPasswordPage = () => {
               <AlertTriangle className="w-8 h-8 text-white" />
             </div>
             <CardTitle className="text-2xl text-red-600">Reset Link Invalid</CardTitle>
-            <CardDescription>
+            <CardDescription className="text-center">
               This password reset link is invalid, expired, or has already been used. Please request a new password reset.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <p className="text-sm text-amber-700">
+                <strong>Common reasons for this error:</strong>
+              </p>
+              <ul className="text-sm text-amber-700 mt-2 space-y-1 list-disc list-inside">
+                <li>The link was clicked more than once</li>
+                <li>The link has expired (links expire after 1 hour)</li>
+                <li>The link was corrupted or incomplete</li>
+                <li>You already reset your password using this link</li>
+              </ul>
+            </div>
+            
             <Button 
-              onClick={() => navigate('/lms')} 
+              onClick={handleRequestNewReset}
               className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
             >
-              Back to Login
+              Request New Password Reset
             </Button>
           </CardContent>
         </Card>
@@ -345,6 +365,17 @@ const ResetPasswordPage = () => {
               >
                 {isLoading ? 'Updating Password...' : 'Update Password'}
               </Button>
+
+              <div className="text-center">
+                <Button 
+                  type="button"
+                  variant="link"
+                  onClick={handleRequestNewReset}
+                  className="text-sm text-gray-600 hover:text-gray-800"
+                >
+                  Back to Login
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>
