@@ -26,7 +26,7 @@ export const useAuthActions = (setCurrentUser: (user: any) => void) => {
   const signUp = async (email: string, password: string, name: string, role: 'student' | 'admin'): Promise<{ error?: string }> => {
     try {
       // Get the current site URL for email confirmation redirect
-      const redirectUrl = `${window.location.origin}/lms/${role}/login`;
+      const redirectUrl = `${window.location.origin}/lms`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -68,7 +68,7 @@ export const useAuthActions = (setCurrentUser: (user: any) => void) => {
 
   const resetPassword = async (email: string): Promise<{ error?: string }> => {
     try {
-      // Always redirect to the new reset password page
+      // Use the current origin to build the reset password URL
       const redirectUrl = `${window.location.origin}/lms/reset-password`;
       
       console.log('Sending password reset email with redirect URL:', redirectUrl);

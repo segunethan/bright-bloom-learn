@@ -23,44 +23,75 @@ const ResetPasswordPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Extract token from URL parameters
-  const token = searchParams.get('token');
+  // Extract parameters from URL
+  const accessToken = searchParams.get('access_token');
+  const refreshToken = searchParams.get('refresh_token');
   const type = searchParams.get('type');
+  const error = searchParams.get('error');
+  const errorDescription = searchParams.get('error_description');
 
   useEffect(() => {
-    // Verify the reset token when component mounts
-    const verifyToken = async () => {
-      if (!token || type !== 'recovery') {
+    const handleResetToken = async () => {
+      // Check if there's an error in the URL
+      if (error) {
+        console.error('URL contains error:', error, errorDescription);
+        setTokenValid(false);
+        
+        let errorMessage = "This password reset link is invalid or has expired.";
+        if (error === 'access_denied' && errorDescription?.includes('expired')) {
+          errorMessage = "This password reset link has expired. Please request a new password reset.";
+        }
+        
+        toast({
+          title: "Reset Link Error",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Check if we have the required tokens
+      if (!accessToken || !refreshToken || type !== 'recovery') {
+        console.error('Missing required tokens or invalid type');
         setTokenValid(false);
         toast({
           title: "Invalid Reset Link",
-          description: "This password reset link is invalid or has expired.",
+          description: "This password reset link is invalid or malformed.",
           variant: "destructive"
         });
         return;
       }
 
       try {
-        // Verify the session with the token
-        const { data, error } = await supabase.auth.verifyOtp({
-          token_hash: token,
-          type: 'recovery'
+        console.log('Setting session with tokens...');
+        // Set the session using the tokens from the URL
+        const { data, error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken
         });
 
-        if (error) {
-          console.error('Token verification failed:', error);
+        if (sessionError) {
+          console.error('Session error:', sessionError);
           setTokenValid(false);
           toast({
             title: "Invalid Reset Link",
             description: "This password reset link is invalid or has expired.",
             variant: "destructive"
           });
-        } else {
-          console.log('Token verified successfully');
+        } else if (data.session) {
+          console.log('Session set successfully, user can reset password');
           setTokenValid(true);
+        } else {
+          console.error('No session created');
+          setTokenValid(false);
+          toast({
+            title: "Invalid Reset Link",
+            description: "Unable to verify reset link. Please try again.",
+            variant: "destructive"
+          });
         }
       } catch (error) {
-        console.error('Token verification error:', error);
+        console.error('Token handling error:', error);
         setTokenValid(false);
         toast({
           title: "Invalid Reset Link",
@@ -70,14 +101,13 @@ const ResetPasswordPage = () => {
       }
     };
 
-    verifyToken();
-  }, [token, type, toast]);
+    handleResetToken();
+  }, [accessToken, refreshToken, type, error, errorDescription, toast]);
 
   const validatePassword = (password: string) => {
     if (password.length < 6) {
       return "Password must be at least 6 characters long";
     }
-    // Add more validation rules as needed
     return null;
   };
 
@@ -180,9 +210,9 @@ const ResetPasswordPage = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500 rounded-full mb-4 mx-auto">
               <AlertTriangle className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-2xl text-red-600">Invalid Reset Link</CardTitle>
+            <CardTitle className="text-2xl text-red-600">Reset Link Invalid</CardTitle>
             <CardDescription>
-              This password reset link is invalid or has expired. Please request a new password reset.
+              This password reset link is invalid, expired, or has already been used. Please request a new password reset.
             </CardDescription>
           </CardHeader>
           <CardContent>
