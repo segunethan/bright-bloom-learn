@@ -18,7 +18,6 @@ const StudentSettings = () => {
     phone_number: currentUser?.phone_number || ''
   });
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
@@ -62,7 +61,7 @@ const StudentSettings = () => {
     }
   };
 
-  const handlePasswordReset = async (e: React.FormEvent) => {
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (passwordData.newPassword !== passwordData.confirmPassword) {
@@ -98,9 +97,9 @@ const StudentSettings = () => {
         title: "Password Updated",
         description: "Your password has been successfully updated."
       });
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setPasswordData({ newPassword: '', confirmPassword: '' });
     } catch (error: any) {
-      console.error('Password reset failed:', error);
+      console.error('Password update failed:', error);
       toast({
         title: "Password Update Failed",
         description: error.message || "Failed to update password. Please try again.",
@@ -208,14 +207,14 @@ const StudentSettings = () => {
         </CardContent>
       </Card>
 
-      {/* Password Reset */}
+      {/* Password Update */}
       <Card className="border-0 bg-white/80 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="text-lg font-semibold text-gray-800">Password & Security</CardTitle>
-          <CardDescription>Change your password to keep your account secure</CardDescription>
+          <CardTitle className="text-lg font-semibold text-gray-800">Change Password</CardTitle>
+          <CardDescription>Update your password (only available when logged in)</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handlePasswordReset} className="space-y-4">
+          <form onSubmit={handlePasswordUpdate} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="newPassword">New Password</Label>
               <Input
@@ -238,6 +237,14 @@ const StudentSettings = () => {
                 minLength={6}
               />
             </div>
+            
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-xs text-blue-700">
+                <strong>Note:</strong> This password update is only available when you're logged in. 
+                If you've forgotten your password, please use the "Forgot Password" link on the login page.
+              </p>
+            </div>
+            
             <Button 
               type="submit"
               disabled={isUpdating}

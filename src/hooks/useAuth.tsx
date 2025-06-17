@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
@@ -186,17 +187,8 @@ export const useAuth = () => {
 
   const resetPassword = async (email: string): Promise<{ error?: string }> => {
     try {
-      // Determine the correct redirect URL based on current location or email domain
-      const currentUrl = window.location.href;
-      let redirectUrl;
-      
-      // If we're on admin login page or the email suggests admin, redirect to admin login
-      if (currentUrl.includes('/admin/login') || email.toLowerCase().includes('admin')) {
-        redirectUrl = `${window.location.origin}/lms/admin/login`;
-      } else {
-        // Default to student login
-        redirectUrl = `${window.location.origin}/lms/student/login`;
-      }
+      // Always redirect to the new reset password page
+      const redirectUrl = `${window.location.origin}/lms/reset-password`;
       
       console.log('Sending password reset email with redirect URL:', redirectUrl);
       console.log('Reset password for email:', email);

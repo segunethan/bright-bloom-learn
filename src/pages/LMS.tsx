@@ -6,6 +6,7 @@ import StudentDashboard from '../components/lms/StudentDashboard';
 import AdminLogin from '../components/lms/AdminLogin';
 import AdminDashboard from '../components/lms/AdminDashboard';
 import CourseViewer from '../components/lms/CourseViewer';
+import ResetPasswordPage from '../components/lms/ResetPasswordPage';
 
 const LMS = () => {
   return (
@@ -16,6 +17,7 @@ const LMS = () => {
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/*" element={<AdminDashboard />} />
         <Route path="/course/:courseId" element={<CourseViewer />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Routes>
     </div>
   );
