@@ -1,13 +1,15 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/tabs';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLMS } from '../../contexts/LMSContext';
 import { User, Lock, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ForgotPasswordForm from './ForgotPasswordForm';
+
 const StudentLogin = () => {
   const [loginData, setLoginData] = useState({
     email: '',
@@ -28,27 +30,25 @@ const StudentLogin = () => {
     currentUser
   } = useLMS();
   const navigate = useNavigate();
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
 
   // Redirect if already authenticated as student
   React.useEffect(() => {
-    console.log('StudentLogin - Auth state:', {
-      isAuthenticated,
-      currentUser
-    });
+    console.log('StudentLogin - Auth state:', { isAuthenticated, currentUser });
     if (isAuthenticated && currentUser) {
       console.log('User is authenticated, redirecting to dashboard');
       navigate('/lms/student');
     }
   }, [isAuthenticated, currentUser, navigate]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    
     try {
       console.log('Attempting login with:', loginData.email);
       const result = await signIn(loginData.email, loginData.password);
+      
       if (result.error) {
         console.error('Login error:', result.error);
         toast({
@@ -57,12 +57,12 @@ const StudentLogin = () => {
           variant: "destructive"
         });
       } else {
-        console.log('Login successful, auth should update automatically');
+        console.log('Login successful');
         toast({
           title: "Welcome back!",
           description: "You have been successfully logged in."
         });
-        // Don't manually navigate here - let the useEffect handle it when auth state updates
+        // Navigation will be handled by useEffect when auth state updates
       }
     } catch (error) {
       console.error('Login failed:', error);
@@ -75,8 +75,10 @@ const StudentLogin = () => {
       setIsLoading(false);
     }
   };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (signupData.password !== signupData.confirmPassword) {
       toast({
         title: "Password Mismatch",
@@ -85,24 +87,31 @@ const StudentLogin = () => {
       });
       return;
     }
+    
     if (signupData.password.length < 6) {
       toast({
-        title: "Password Too Short",
+        title: "Password Too Short", 
         description: "Password must be at least 6 characters long.",
         variant: "destructive"
       });
       return;
     }
+    
     setIsLoading(true);
+    
     try {
+      console.log('Attempting signup with:', signupData.email);
       const result = await signUp(signupData.email, signupData.password, signupData.name, 'student');
+      
       if (result.error) {
+        console.error('Signup error:', result.error);
         toast({
           title: "Sign Up Failed",
           description: result.error,
           variant: "destructive"
         });
       } else {
+        console.log('Signup successful');
         toast({
           title: "Account Created!",
           description: "Please check your email to verify your account."
@@ -126,8 +135,20 @@ const StudentLogin = () => {
       setIsLoading(false);
     }
   };
+
+  // Check if signup form is valid
+  const isSignupFormValid = signupData.name.trim() && 
+                           signupData.email.trim() && 
+                           signupData.password.length >= 6 && 
+                           signupData.confirmPassword.length >= 6 &&
+                           signupData.password === signupData.confirmPassword;
+
+  // Check if login form is valid
+  const isLoginFormValid = loginData.email.trim() && loginData.password.trim();
+
   if (showForgotPassword) {
-    return <div className="min-h-screen flex items-center justify-center p-4">
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full mb-4">
@@ -140,9 +161,12 @@ const StudentLogin = () => {
           </div>
           <ForgotPasswordForm onBack={() => setShowForgotPassword(false)} userType="student" />
         </div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="min-h-screen flex items-center justify-center p-4">
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full mb-4">
@@ -174,10 +198,15 @@ const StudentLogin = () => {
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input id="login-email" type="email" placeholder="your.email@example.com" value={loginData.email} onChange={e => setLoginData({
-                      ...loginData,
-                      email: e.target.value
-                    })} className="pl-10" required />
+                      <Input 
+                        id="login-email" 
+                        type="email" 
+                        placeholder="your.email@example.com" 
+                        value={loginData.email} 
+                        onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                        className="pl-10" 
+                        required 
+                      />
                     </div>
                   </div>
                   
@@ -187,20 +216,34 @@ const StudentLogin = () => {
                     </label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input id="login-password" type="password" placeholder="Enter your password" value={loginData.password} onChange={e => setLoginData({
-                      ...loginData,
-                      password: e.target.value
-                    })} className="pl-10" required />
+                      <Input 
+                        id="login-password" 
+                        type="password" 
+                        placeholder="Enter your password" 
+                        value={loginData.password} 
+                        onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                        className="pl-10" 
+                        required 
+                      />
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white" disabled={isLoading}>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white" 
+                    disabled={isLoading || !isLoginFormValid}
+                  >
                     {isLoading ? 'Signing in...' : 'Sign In'}
                   </Button>
                 </form>
 
                 <div className="text-center">
-                  <Button type="button" variant="link" onClick={() => setShowForgotPassword(true)} className="text-green-600 hover:text-green-700 text-sm">
+                  <Button 
+                    type="button" 
+                    variant="link" 
+                    onClick={() => setShowForgotPassword(true)} 
+                    className="text-green-600 hover:text-green-700 text-sm"
+                  >
                     Forgot your password?
                   </Button>
                 </div>
@@ -214,10 +257,15 @@ const StudentLogin = () => {
                     </label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input id="signup-name" type="text" placeholder="Enter your full name" value={signupData.name} onChange={e => setSignupData({
-                      ...signupData,
-                      name: e.target.value
-                    })} className="pl-10" required />
+                      <Input 
+                        id="signup-name" 
+                        type="text" 
+                        placeholder="Enter your full name" 
+                        value={signupData.name} 
+                        onChange={(e) => setSignupData({ ...signupData, name: e.target.value })}
+                        className="pl-10" 
+                        required 
+                      />
                     </div>
                   </div>
 
@@ -227,10 +275,15 @@ const StudentLogin = () => {
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input id="signup-email" type="email" placeholder="your.email@example.com" value={signupData.email} onChange={e => setSignupData({
-                      ...signupData,
-                      email: e.target.value
-                    })} className="pl-10" required />
+                      <Input 
+                        id="signup-email" 
+                        type="email" 
+                        placeholder="your.email@example.com" 
+                        value={signupData.email} 
+                        onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
+                        className="pl-10" 
+                        required 
+                      />
                     </div>
                   </div>
                   
@@ -240,10 +293,16 @@ const StudentLogin = () => {
                     </label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input id="signup-password" type="password" placeholder="Create a password" value={signupData.password} onChange={e => setSignupData({
-                      ...signupData,
-                      password: e.target.value
-                    })} className="pl-10" required minLength={6} />
+                      <Input 
+                        id="signup-password" 
+                        type="password" 
+                        placeholder="Create a password" 
+                        value={signupData.password} 
+                        onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
+                        className="pl-10" 
+                        required 
+                        minLength={6} 
+                      />
                     </div>
                   </div>
 
@@ -253,14 +312,24 @@ const StudentLogin = () => {
                     </label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input id="signup-confirm-password" type="password" placeholder="Confirm your password" value={signupData.confirmPassword} onChange={e => setSignupData({
-                      ...signupData,
-                      confirmPassword: e.target.value
-                    })} className="pl-10" required minLength={6} />
+                      <Input 
+                        id="signup-confirm-password" 
+                        type="password" 
+                        placeholder="Confirm your password" 
+                        value={signupData.confirmPassword} 
+                        onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
+                        className="pl-10" 
+                        required 
+                        minLength={6} 
+                      />
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white" disabled={isLoading}>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white" 
+                    disabled={isLoading || !isSignupFormValid}
+                  >
                     {isLoading ? 'Creating Account...' : 'Create Account'}
                   </Button>
                 </form>
@@ -275,6 +344,8 @@ const StudentLogin = () => {
           </CardContent>
         </Card>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default StudentLogin;
