@@ -35,6 +35,7 @@ const SectionManager: React.FC<SectionManagerProps> = ({ courseId }) => {
     title: '',
     description: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -43,6 +44,8 @@ const SectionManager: React.FC<SectionManagerProps> = ({ courseId }) => {
 
   const loadSections = async () => {
     try {
+      console.log('Loading sections for course:', courseId);
+      
       // Query sections directly from the table
       const { data: sectionsData, error: sectionsError } = await supabase
         .from('sections')
@@ -60,6 +63,7 @@ const SectionManager: React.FC<SectionManagerProps> = ({ courseId }) => {
         return;
       }
 
+      console.log('Sections loaded:', sectionsData);
       setSections(sectionsData || []);
       
       // Load resources for each section
@@ -99,8 +103,10 @@ const SectionManager: React.FC<SectionManagerProps> = ({ courseId }) => {
     }
   };
 
-  const handleCreateSection = async () => {
-    if (!newSection.title) {
+  const handleCreateSection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newSection.title.trim()) {
       toast({
         title: "Error",
         description: "Section title is required",
@@ -109,16 +115,33 @@ const SectionManager: React.FC<SectionManagerProps> = ({ courseId }) => {
       return;
     }
 
+    if (!courseId) {
+      toast({
+        title: "Error",
+        description: "Course ID is missing",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    
     try {
-      const maxOrder = Math.max(...sections.map(s => s.order_index), 0);
+      console.log('Creating section with data:', {
+        course_id: courseId,
+        title: newSection.title,
+        description: newSection.description
+      });
+
+      const maxOrder = sections.length > 0 ? Math.max(...sections.map(s => s.order_index)) : 0;
       
       const { data, error } = await supabase
         .from('sections')
         .insert([
           {
             course_id: courseId,
-            title: newSection.title,
-            description: newSection.description,
+            title: newSection.title.trim(),
+            description: newSection.description.trim() || null,
             order_index: maxOrder + 1
           }
         ])
@@ -129,11 +152,13 @@ const SectionManager: React.FC<SectionManagerProps> = ({ courseId }) => {
         console.error('Error creating section:', error);
         toast({
           title: "Error",
-          description: "Failed to create section",
+          description: `Failed to create section: ${error.message}`,
           variant: "destructive"
         });
         return;
       }
+
+      console.log('Section created successfully:', data);
 
       if (data) {
         setSections(prev => [...prev, data]);
@@ -148,9 +173,11 @@ const SectionManager: React.FC<SectionManagerProps> = ({ courseId }) => {
       console.error('Error creating section:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: "An unexpected error occurred while creating the section",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -211,6 +238,9 @@ const SectionManager: React.FC<SectionManagerProps> = ({ courseId }) => {
     });
   };
 
+  // Check if create form is valid
+  const isCreateFormValid = newSection.title.trim().length > 0;
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -233,41 +263,49 @@ const SectionManager: React.FC<SectionManagerProps> = ({ courseId }) => {
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-gray-800">Create New Section</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="section-title">Section Title *</Label>
-              <Input
-                id="section-title"
-                placeholder="Enter section title"
-                value={newSection.title}
-                onChange={(e) => setNewSection({ ...newSection, title: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="section-description">Description</Label>
-              <Textarea
-                id="section-description"
-                placeholder="Enter section description (optional)"
-                value={newSection.description}
-                onChange={(e) => setNewSection({ ...newSection, description: e.target.value })}
-                rows={3}
-              />
-            </div>
-            <div className="flex space-x-2">
-              <Button 
-                onClick={handleCreateSection}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
-                disabled={!newSection.title}
-              >
-                Create Section
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setIsCreating(false)}
-              >
-                Cancel
-              </Button>
-            </div>
+          <CardContent>
+            <form onSubmit={handleCreateSection} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="section-title">Section Title *</Label>
+                <Input
+                  id="section-title"
+                  placeholder="Enter section title"
+                  value={newSection.title}
+                  onChange={(e) => setNewSection({ ...newSection, title: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="section-description">Description</Label>
+                <Textarea
+                  id="section-description"
+                  placeholder="Enter section description (optional)"
+                  value={newSection.description}
+                  onChange={(e) => setNewSection({ ...newSection, description: e.target.value })}
+                  rows={3}
+                />
+              </div>
+              <div className="flex space-x-2">
+                <Button 
+                  type="submit"
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
+                  disabled={isLoading || !isCreateFormValid}
+                >
+                  {isLoading ? 'Creating...' : 'Create Section'}
+                </Button>
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  onClick={() => {
+                    setIsCreating(false);
+                    setNewSection({ title: '', description: '' });
+                  }}
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
           </CardContent>
         </Card>
       )}
