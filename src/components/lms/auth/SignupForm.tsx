@@ -24,6 +24,13 @@ const SignupForm = ({
   isLoading,
   isSignupFormValid
 }: SignupFormProps) => {
+  // Calculate if form is valid locally to ensure button activation
+  const isFormValid = signupData.name.trim().length > 0 && 
+                     signupData.email.trim().length > 0 && 
+                     signupData.password.length >= 6 && 
+                     signupData.confirmPassword.length >= 6 &&
+                     signupData.password === signupData.confirmPassword;
+
   return (
     <form onSubmit={onSignup} className="space-y-4">
       <div className="space-y-2">
@@ -103,7 +110,7 @@ const SignupForm = ({
       <Button 
         type="submit" 
         className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white" 
-        disabled={isLoading || !isSignupFormValid}
+        disabled={isLoading || !isFormValid}
       >
         {isLoading ? 'Creating Account...' : 'Create Account'}
       </Button>

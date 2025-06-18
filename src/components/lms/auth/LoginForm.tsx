@@ -24,6 +24,9 @@ const LoginForm = ({
   isLoginFormValid,
   onForgotPassword
 }: LoginFormProps) => {
+  // Calculate if form is valid locally to ensure button activation
+  const isFormValid = loginData.email.trim().length > 0 && loginData.password.trim().length > 0;
+
   return (
     <div className="space-y-4">
       <form onSubmit={onLogin} className="space-y-4">
@@ -66,7 +69,7 @@ const LoginForm = ({
         <Button 
           type="submit" 
           className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white" 
-          disabled={isLoading || !isLoginFormValid}
+          disabled={isLoading || !isFormValid}
         >
           {isLoading ? 'Signing in...' : 'Sign In'}
         </Button>
