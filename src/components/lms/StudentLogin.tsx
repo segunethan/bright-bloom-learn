@@ -136,15 +136,15 @@ const StudentLogin = () => {
     }
   };
 
-  // Check if signup form is valid
-  const isSignupFormValid = signupData.name.trim() && 
-                           signupData.email.trim() && 
+  // Check if signup form is valid - fixed validation logic
+  const isSignupFormValid = signupData.name.trim().length > 0 && 
+                           signupData.email.trim().length > 0 && 
                            signupData.password.length >= 6 && 
                            signupData.confirmPassword.length >= 6 &&
                            signupData.password === signupData.confirmPassword;
 
   // Check if login form is valid
-  const isLoginFormValid = loginData.email.trim() && loginData.password.trim();
+  const isLoginFormValid = loginData.email.trim().length > 0 && loginData.password.trim().length > 0;
 
   if (showForgotPassword) {
     return (
