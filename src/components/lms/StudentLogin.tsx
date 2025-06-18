@@ -2,13 +2,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLMS } from '../../contexts/LMSContext';
-import { User, Lock, Mail } from 'lucide-react';
+import { User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ForgotPasswordForm from './ForgotPasswordForm';
+import StudentAuthTabs from './auth/StudentAuthTabs';
 
 const StudentLogin = () => {
   const [loginData, setLoginData] = useState({
@@ -184,157 +183,18 @@ const StudentLogin = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="login" className="space-y-4 mt-4">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <label htmlFor="login-email" className="text-sm font-medium text-gray-700">
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input 
-                        id="login-email" 
-                        type="email" 
-                        placeholder="your.email@example.com" 
-                        value={loginData.email} 
-                        onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                        className="pl-10" 
-                        required 
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label htmlFor="login-password" className="text-sm font-medium text-gray-700">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input 
-                        id="login-password" 
-                        type="password" 
-                        placeholder="Enter your password" 
-                        value={loginData.password} 
-                        onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                        className="pl-10" 
-                        required 
-                      />
-                    </div>
-                  </div>
-
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white" 
-                    disabled={isLoading || !isLoginFormValid}
-                  >
-                    {isLoading ? 'Signing in...' : 'Sign In'}
-                  </Button>
-                </form>
-
-                <div className="text-center">
-                  <Button 
-                    type="button" 
-                    variant="link" 
-                    onClick={() => setShowForgotPassword(true)} 
-                    className="text-green-600 hover:text-green-700 text-sm"
-                  >
-                    Forgot your password?
-                  </Button>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="signup" className="space-y-4 mt-4">
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="space-y-2">
-                    <label htmlFor="signup-name" className="text-sm font-medium text-gray-700">
-                      Full Name
-                    </label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input 
-                        id="signup-name" 
-                        type="text" 
-                        placeholder="Enter your full name" 
-                        value={signupData.name} 
-                        onChange={(e) => setSignupData({ ...signupData, name: e.target.value })}
-                        className="pl-10" 
-                        required 
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="signup-email" className="text-sm font-medium text-gray-700">
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input 
-                        id="signup-email" 
-                        type="email" 
-                        placeholder="your.email@example.com" 
-                        value={signupData.email} 
-                        onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
-                        className="pl-10" 
-                        required 
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label htmlFor="signup-password" className="text-sm font-medium text-gray-700">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input 
-                        id="signup-password" 
-                        type="password" 
-                        placeholder="Create a password" 
-                        value={signupData.password} 
-                        onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
-                        className="pl-10" 
-                        required 
-                        minLength={6} 
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="signup-confirm-password" className="text-sm font-medium text-gray-700">
-                      Confirm Password
-                    </label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input 
-                        id="signup-confirm-password" 
-                        type="password" 
-                        placeholder="Confirm your password" 
-                        value={signupData.confirmPassword} 
-                        onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
-                        className="pl-10" 
-                        required 
-                        minLength={6} 
-                      />
-                    </div>
-                  </div>
-
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white" 
-                    disabled={isLoading || !isSignupFormValid}
-                  >
-                    {isLoading ? 'Creating Account...' : 'Create Account'}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
+            <StudentAuthTabs
+              loginData={loginData}
+              setLoginData={setLoginData}
+              signupData={signupData}
+              setSignupData={setSignupData}
+              onLogin={handleLogin}
+              onSignup={handleSignup}
+              isLoading={isLoading}
+              isLoginFormValid={isLoginFormValid}
+              isSignupFormValid={isSignupFormValid}
+              onForgotPassword={() => setShowForgotPassword(true)}
+            />
 
             <div className="mt-6 text-center">
               <Button variant="link" onClick={() => navigate('/lms/admin/login')} className="text-green-600 hover:text-green-700">
