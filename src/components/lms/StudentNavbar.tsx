@@ -11,8 +11,14 @@ const StudentNavbar = () => {
   const location = useLocation();
 
   const handleLogout = async () => {
-    await signOut();
-    navigate('/lms');
+    console.log('Student logout initiated');
+    try {
+      await signOut();
+      console.log('Student logout successful, redirecting to login');
+      navigate('/lms');
+    } catch (error) {
+      console.error('Student logout error:', error);
+    }
   };
 
   const isActive = (path: string) => location.pathname.includes(path);

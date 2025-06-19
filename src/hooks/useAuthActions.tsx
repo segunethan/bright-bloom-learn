@@ -59,10 +59,19 @@ export const useAuthActions = (setCurrentUser: (user: any) => void) => {
 
   const signOut = async (): Promise<void> => {
     try {
-      await supabase.auth.signOut();
+      console.log('Signing out user');
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Sign out error:', error);
+        throw error;
+      }
+      
+      console.log('Sign out successful');
       setCurrentUser(null);
     } catch (error) {
       console.error('Error signing out:', error);
+      throw error;
     }
   };
 

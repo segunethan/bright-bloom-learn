@@ -11,8 +11,14 @@ const AdminNavbar = () => {
   const location = useLocation();
 
   const handleLogout = async () => {
-    await signOut();
-    navigate('/lms');
+    console.log('Admin logout initiated');
+    try {
+      await signOut();
+      console.log('Admin logout successful, redirecting to login');
+      navigate('/lms/admin/login');
+    } catch (error) {
+      console.error('Admin logout error:', error);
+    }
   };
 
   const isActive = (path: string) => location.pathname.includes(path);
