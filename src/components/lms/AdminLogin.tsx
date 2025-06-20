@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -32,15 +33,16 @@ const AdminLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Redirect if already authenticated as admin
+  // Redirect if already authenticated
   React.useEffect(() => {
     console.log('AdminLogin - Auth state:', { isAuthenticated, currentUser });
-    if (isAuthenticated && currentUser?.role === 'admin') {
-      console.log('Admin user authenticated, redirecting to admin dashboard');
-      navigate('/lms/admin');
-    } else if (isAuthenticated && currentUser?.role === 'student') {
-      console.log('Student user authenticated, redirecting to student dashboard');
-      navigate('/lms/student');
+    if (isAuthenticated && currentUser) {
+      console.log('User is authenticated, redirecting based on role');
+      if (currentUser.role === 'admin') {
+        navigate('/lms/admin');
+      } else if (currentUser.role === 'student') {
+        navigate('/lms/student');
+      }
     }
   }, [isAuthenticated, currentUser, navigate]);
 
@@ -60,7 +62,7 @@ const AdminLogin = () => {
           variant: "destructive"
         });
       } else {
-        console.log('Admin login successful');
+        console.log('Admin login successful, waiting for auth state update');
         toast({
           title: "Welcome back!",
           description: "You have been successfully logged in."

@@ -5,7 +5,7 @@ export const useAuthActions = (setCurrentUser: (user: any) => void) => {
   const signIn = async (email: string, password: string): Promise<{ error?: string }> => {
     try {
       console.log('Signing in user:', email);
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -15,7 +15,10 @@ export const useAuthActions = (setCurrentUser: (user: any) => void) => {
         return { error: error.message };
       }
 
-      console.log('Sign in successful');
+      if (data.user) {
+        console.log('Sign in successful for user:', data.user.id);
+      }
+
       return {};
     } catch (error) {
       console.error('Unexpected sign in error:', error);
@@ -27,6 +30,8 @@ export const useAuthActions = (setCurrentUser: (user: any) => void) => {
     try {
       // Get the current site URL for email confirmation redirect
       const redirectUrl = `${window.location.origin}/lms`;
+      
+      console.log('Signing up user with redirect URL:', redirectUrl);
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -41,18 +46,22 @@ export const useAuthActions = (setCurrentUser: (user: any) => void) => {
       });
 
       if (error) {
+        console.error('Sign up error:', error.message);
         return { error: error.message };
       }
 
       // Check if user needs to confirm email
       if (data.user && !data.user.email_confirmed_at) {
+        console.log('User needs to confirm email');
         return { 
           error: 'Please check your email and click the confirmation link to complete your registration. You may need to check your spam folder.' 
         };
       }
 
+      console.log('Sign up successful');
       return {};
     } catch (error) {
+      console.error('Unexpected sign up error:', error);
       return { error: 'An unexpected error occurred' };
     }
   };

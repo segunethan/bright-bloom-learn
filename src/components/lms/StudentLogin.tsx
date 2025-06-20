@@ -31,12 +31,16 @@ const StudentLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Redirect if already authenticated as student
+  // Redirect if already authenticated
   React.useEffect(() => {
     console.log('StudentLogin - Auth state:', { isAuthenticated, currentUser });
     if (isAuthenticated && currentUser) {
-      console.log('User is authenticated, redirecting to dashboard');
-      navigate('/lms/student');
+      console.log('User is authenticated, redirecting based on role');
+      if (currentUser.role === 'admin') {
+        navigate('/lms/admin');
+      } else {
+        navigate('/lms/student');
+      }
     }
   }, [isAuthenticated, currentUser, navigate]);
 
@@ -56,7 +60,7 @@ const StudentLogin = () => {
           variant: "destructive"
         });
       } else {
-        console.log('Login successful');
+        console.log('Login successful, waiting for auth state update');
         toast({
           title: "Welcome back!",
           description: "You have been successfully logged in."
