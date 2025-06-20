@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ import {
   GripVertical
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import ChapterManager from './ChapterManager';
 
 interface SectionManagerProps {
   courseId: string;
@@ -423,18 +425,12 @@ const SectionManager: React.FC<SectionManagerProps> = ({ courseId }) => {
                     )}
                   </div>
 
-                  {/* Chapters/Modules placeholder */}
+                  {/* Chapters Section */}
                   <div className="border-t pt-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-medium text-gray-800">Chapters</h4>
-                      <Button variant="outline" size="sm">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Chapter
-                      </Button>
-                    </div>
-                    <div className="text-center py-6 text-gray-500">
-                      <p>No chapters created yet</p>
-                    </div>
+                    <ChapterManager 
+                      sectionId={section.id} 
+                      courseId={courseId}
+                    />
                   </div>
                 </div>
               </CardContent>
