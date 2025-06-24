@@ -1,59 +1,26 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useLMS } from '../../contexts/LMSContext';
-import { Book, Plus, Edit, Settings, Users, PlayCircle } from 'lucide-react';
+import { Book, Plus, Edit, Settings } from 'lucide-react';
 
 const CourseManagement = () => {
-  const { courses, addCourse } = useLMS();
-  const navigate = useNavigate();
+  const { courses } = useLMS();
   const [isCreating, setIsCreating] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [newCourse, setNewCourse] = useState({
     title: '',
     description: ''
   });
 
-  const handleCreateCourse = async () => {
-    if (!newCourse.title.trim() || !newCourse.description.trim()) {
-      return;
-    }
-
-    setIsLoading(true);
-    
-    try {
-      const courseData = {
-        title: newCourse.title.trim(),
-        description: newCourse.description.trim(),
-        totalModules: 0
-      };
-      
-      console.log('Creating course:', courseData);
-      await addCourse(courseData);
-      
-      setIsCreating(false);
-      setNewCourse({ title: '', description: '' });
-    } catch (error) {
-      console.error('Error creating course:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleCreateCourse = () => {
+    // In real app, this would create a new course via API
+    console.log('Creating course:', newCourse);
+    setIsCreating(false);
+    setNewCourse({ title: '', description: '' });
   };
-
-  const handleEditContent = (courseId: string) => {
-    navigate(`/lms/admin/courses/${courseId}`);
-  };
-
-  const handleCourseSettings = (courseId: string) => {
-    console.log('Opening settings for course:', courseId);
-    // This would open a settings modal in a real app
-  };
-
-  const isCreateFormValid = newCourse.title.trim().length > 0 && newCourse.description.trim().length > 0;
 
   return (
     <div className="space-y-6">
@@ -82,7 +49,7 @@ const CourseManagement = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Course Title *</label>
+              <label className="text-sm font-medium text-gray-700">Course Title</label>
               <Input
                 placeholder="Enter course title"
                 value={newCourse.title}
@@ -90,7 +57,7 @@ const CourseManagement = () => {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Description *</label>
+              <label className="text-sm font-medium text-gray-700">Description</label>
               <Textarea
                 placeholder="Enter course description"
                 value={newCourse.description}
@@ -102,17 +69,12 @@ const CourseManagement = () => {
               <Button 
                 onClick={handleCreateCourse}
                 className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white"
-                disabled={isLoading || !isCreateFormValid}
               >
-                {isLoading ? 'Creating...' : 'Create Course'}
+                Create Course
               </Button>
               <Button 
                 variant="outline" 
-                onClick={() => {
-                  setIsCreating(false);
-                  setNewCourse({ title: '', description: '' });
-                }}
-                disabled={isLoading}
+                onClick={() => setIsCreating(false)}
               >
                 Cancel
               </Button>
@@ -128,16 +90,15 @@ const CourseManagement = () => {
             <CardHeader className="pb-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <CardTitle className="text-lg font-semibold text-gray-800 flex items-center space-x-2">
-                    <Book className="w-5 h-5 text-purple-600" />
-                    <span>{course.title}</span>
+                  <CardTitle className="text-lg font-semibold text-gray-800">
+                    {course.title}
                   </CardTitle>
                   <CardDescription className="mt-2">
                     {course.description}
                   </CardDescription>
                 </div>
                 <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center ml-4">
-                  <PlayCircle className="w-6 h-6 text-white" />
+                  <Book className="w-6 h-6 text-white" />
                 </div>
               </div>
             </CardHeader>
@@ -145,42 +106,28 @@ const CourseManagement = () => {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <div className="text-center">
-                  <div className="font-medium text-gray-800">0</div>
+                  <div className="font-medium text-gray-800">{course.sections.length}</div>
                   <div className="text-gray-500">Sections</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-medium text-gray-800">{course.total_modules || 0}</div>
+                  <div className="font-medium text-gray-800">{course.totalModules}</div>
                   <div className="text-gray-500">Modules</div>
                 </div>
                 <div className="text-center">
-                  <div className="font-medium text-gray-800">0</div>
+                  <div className="font-medium text-gray-800">24</div>
                   <div className="text-gray-500">Students</div>
                 </div>
               </div>
 
               <div className="flex space-x-2">
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => handleEditContent(course.id)}
-                >
+                <Button variant="outline" className="flex-1">
                   <Edit className="w-4 h-4 mr-2" />
                   Edit Content
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => handleCourseSettings(course.id)}
-                >
+                <Button variant="outline" className="flex-1">
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
                 </Button>
-              </div>
-
-              <div className="text-center pt-2">
-                <div className="text-xs text-gray-500">
-                  Created: {new Date(course.created_at || '').toLocaleDateString()}
-                </div>
               </div>
             </CardContent>
           </Card>

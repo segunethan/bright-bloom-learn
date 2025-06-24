@@ -5,8 +5,6 @@ import AdminNavbar from './AdminNavbar';
 import AdminOverview from './AdminOverview';
 import CourseManagement from './CourseManagement';
 import StudentManagement from './StudentManagement';
-import CourseEditor from './CourseEditor';
-import LessonEditor from './LessonEditor';
 
 const AdminDashboard = () => {
   return (
@@ -16,9 +14,6 @@ const AdminDashboard = () => {
         <Routes>
           <Route path="/" element={<AdminOverview />} />
           <Route path="/courses" element={<CourseManagement />} />
-          <Route path="/courses/:courseId" element={<CourseEditor />} />
-          <Route path="/courses/:courseId/lesson/new" element={<LessonEditor />} />
-          <Route path="/courses/:courseId/lesson/:lessonId" element={<LessonEditor />} />
           <Route path="/students" element={<StudentManagement />} />
         </Routes>
       </main>

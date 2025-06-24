@@ -1,58 +1,21 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useLMS } from '../../contexts/LMSContext';
-import { supabase } from '@/integrations/supabase/client';
 import { Book, CheckCircle, Clock, TrendingUp } from 'lucide-react';
 
 const StudentProgress = () => {
-  const { currentUser } = useLMS();
-  const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { courses, currentUser, getCourseProgress } = useLMS();
 
-  useEffect(() => {
-    const fetchEnrolledCourses = async () => {
-      if (!currentUser?.id) return;
-
-      try {
-        const { data: enrollments, error } = await supabase
-          .from('enrollments')
-          .select(`
-            *,
-            courses (*)
-          `)
-          .eq('student_id', currentUser.id)
-          .eq('is_active', true);
-
-        if (error) {
-          console.error('Error fetching enrollments:', error);
-          return;
-        }
-
-        setEnrolledCourses(enrollments || []);
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEnrolledCourses();
-  }, [currentUser?.id]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-600">Loading progress...</div>
-      </div>
-    );
-  }
+  const enrolledCourses = courses.filter(course => 
+    currentUser?.enrolledCourses.includes(course.id)
+  );
 
   const totalCourses = enrolledCourses.length;
-  const completedCourses = enrolledCourses.filter(enrollment => enrollment.progress >= 100).length;
+  const completedCourses = enrolledCourses.filter(course => getCourseProgress(course.id) === 100).length;
   const averageProgress = totalCourses > 0 ? 
-    enrolledCourses.reduce((sum, enrollment) => sum + (enrollment.progress || 0), 0) / totalCourses : 0;
+    enrolledCourses.reduce((sum, course) => sum + getCourseProgress(course.id), 0) / totalCourses : 0;
 
   return (
     <div className="space-y-6">
@@ -106,10 +69,9 @@ const StudentProgress = () => {
       <div className="space-y-4">
         <h2 className="text-2xl font-bold text-gray-800 mb-4">Course Progress</h2>
         
-        {enrolledCourses.map((enrollment) => {
-          const course = enrollment.courses;
-          const progress = enrollment.progress || 0;
-          const isCompleted = progress >= 100;
+        {enrolledCourses.map((course) => {
+          const progress = getCourseProgress(course.id);
+          const isCompleted = progress === 100;
           
           return (
             <Card key={course.id} className="border-0 bg-white/80 backdrop-blur-sm">
@@ -140,20 +102,18 @@ const StudentProgress = () => {
 
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div className="text-center">
-                    <div className="font-medium text-gray-800">{course.total_modules}</div>
-                    <div className="text-gray-500">Total Modules</div>
+                    <div className="font-medium text-gray-800">{course.sections.length}</div>
+                    <div className="text-gray-500">Sections</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium text-gray-800">{course.totalModules}</div>
+                    <div className="text-gray-500">Modules</div>
                   </div>
                   <div className="text-center">
                     <div className="font-medium text-gray-800">
-                      {Math.round((progress / 100) * course.total_modules)}
+                      {Math.round((progress / 100) * course.totalModules)}
                     </div>
                     <div className="text-gray-500">Completed</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-medium text-gray-800">
-                      {course.total_modules - Math.round((progress / 100) * course.total_modules)}
-                    </div>
-                    <div className="text-gray-500">Remaining</div>
                   </div>
                 </div>
 
@@ -162,7 +122,7 @@ const StudentProgress = () => {
                     <div className="flex items-center">
                       <Clock className="w-4 h-4 text-yellow-600 mr-2" />
                       <span className="text-sm text-yellow-800">
-                        {course.total_modules - Math.round((progress / 100) * course.total_modules)} modules remaining
+                        {course.totalModules - Math.round((progress / 100) * course.totalModules)} modules remaining
                       </span>
                     </div>
                   </div>

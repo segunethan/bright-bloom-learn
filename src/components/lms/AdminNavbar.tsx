@@ -6,19 +6,13 @@ import { useLMS } from '../../contexts/LMSContext';
 import { Settings, Book, User } from 'lucide-react';
 
 const AdminNavbar = () => {
-  const { currentUser, signOut } = useLMS();
+  const { currentUser, logout } = useLMS();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = async () => {
-    console.log('Admin logout initiated');
-    try {
-      await signOut();
-      console.log('Admin logout successful, redirecting to login');
-      navigate('/lms/admin/login');
-    } catch (error) {
-      console.error('Admin logout error:', error);
-    }
+  const handleLogout = () => {
+    logout();
+    navigate('/lms');
   };
 
   const isActive = (path: string) => location.pathname.includes(path);

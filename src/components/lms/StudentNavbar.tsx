@@ -6,19 +6,13 @@ import { useLMS } from '../../contexts/LMSContext';
 import { User, Book, Settings } from 'lucide-react';
 
 const StudentNavbar = () => {
-  const { currentUser, signOut } = useLMS();
+  const { currentUser, logout } = useLMS();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = async () => {
-    console.log('Student logout initiated');
-    try {
-      await signOut();
-      console.log('Student logout successful, redirecting to login');
-      navigate('/lms');
-    } catch (error) {
-      console.error('Student logout error:', error);
-    }
+  const handleLogout = () => {
+    logout();
+    navigate('/lms');
   };
 
   const isActive = (path: string) => location.pathname.includes(path);
@@ -37,9 +31,9 @@ const StudentNavbar = () => {
             
             <div className="hidden md:flex space-x-1">
               <Button
-                variant={isActive('/student') && !isActive('/progress') && !isActive('/settings') ? "default" : "ghost"}
+                variant={isActive('/student') && !isActive('/progress') ? "default" : "ghost"}
                 onClick={() => navigate('/lms/student')}
-                className={isActive('/student') && !isActive('/progress') && !isActive('/settings') ? 
+                className={isActive('/student') && !isActive('/progress') ? 
                   "bg-gradient-to-r from-green-500 to-emerald-600 text-white" : 
                   "text-gray-600 hover:text-green-600"
                 }
@@ -56,24 +50,13 @@ const StudentNavbar = () => {
               >
                 Progress
               </Button>
-              <Button
-                variant={isActive('/settings') ? "default" : "ghost"}
-                onClick={() => navigate('/lms/student/settings')}
-                className={isActive('/settings') ? 
-                  "bg-gradient-to-r from-green-500 to-emerald-600 text-white" : 
-                  "text-gray-600 hover:text-green-600"
-                }
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </Button>
             </div>
           </div>
 
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <User className="w-4 h-4" />
-              <span>{currentUser?.name || currentUser?.email}</span>
+              <span>{currentUser?.name}</span>
             </div>
             <Button
               variant="outline"
